@@ -16,9 +16,9 @@ public class Main {
 
         PersistenceManager manager = new ReflectivePersistenceManager(conn);
 
-        manager.createTables(Person.class, Department.class);
+        manager.createTables(Person.class, Department.class,);
 
-//        exampleOperations(manager);
+        exampleOperations(manager);
 
         conn.close();
     }
