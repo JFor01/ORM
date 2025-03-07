@@ -81,11 +81,9 @@ public class ReflectivePersistenceManager implements PersistenceManager {
     private String convertJavaTypesToSql(Class<?> javaType)  {
         String sqltype;
         switch (javaType.getSimpleName()) {
-            case "long" : return "BIGINT";
-            case "int" : return "INT";
-            case "String" : return "VARCHAR(255)";
-            case "float" : return "FLOAT";
-            case "short" : return "SMALLINT";
+            case "long", "int": return "INTEGER";
+            case "String" : return "TEXT";
+            case "float", "double": return "REAL";
             default:    try {
                 javaType.getField("id");
                 sqltype = "INT";
@@ -101,7 +99,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
     public List<String> getSqlStrings(HashMap<String, List<Pair<String,Class<?>>>> classFields){
         List<String> createTableSqlStrings = new ArrayList<String>();
         for (String className : classFields.keySet()) {
-            String createTableSqlString = "CREATE TABLE ";
+            String createTableSqlString = "CREATE TABLE IF NOT EXISTS ";
             List<Pair<String,Class<?>>> fieldTypes = classFields.get(className);
             createTableSqlString = createTableSqlString + className + " (%s)";
             System.out.println(createTableSqlString);
