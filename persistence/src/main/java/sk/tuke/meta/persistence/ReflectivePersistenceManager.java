@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import java.security.KeyPair;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -60,6 +61,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         String className = entity.getClass().getSimpleName();
         List<Object> actualFieldsObj = new ArrayList<>();
         Field[] declaredFields = entity.getClass().getDeclaredFields();
+        ResultSet generatedKeys;
         for(Field field : declaredFields){
             try {
                 field.setAccessible(true);
@@ -68,19 +70,26 @@ public class ReflectivePersistenceManager implements PersistenceManager {
                 throw new PersistenceException(e);
             }
         }
-        String insertString = buildSqlInsert(className,declaredFields,actualFieldsObj);
+        String insertString = SqlBuilder.buildSqlInsert(className,declaredFields,actualFieldsObj);
         System.out.println(insertString);
        try {
-            PreparedStatement statement = connection.prepareStatement(insertString);
-            statement.execute();
+            PreparedStatement statement = connection.prepareStatement(insertString,PreparedStatement.RETURN_GENERATED_KEYS);
+            statement.executeUpdate();
+            generatedKeys = statement.getGeneratedKeys();
         } catch (SQLException e) {
             throw new PersistenceException(e);
         }
-       long id = 0;
 
-       String selectIdQuery;
+        long id = 0;
+        try {
+            id = generatedKeys.getLong(1);
+        } catch (SQLException e) {
+            throw new PersistenceException(e);
+        }
 
-       id = getId(entity);
+        String selectIdQuery;
+
+       System.out.println(id);
 
        updateClassId(entity,id);
 
@@ -158,66 +167,21 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         return createTableSqlStrings;
     }
 
-    String buildSqlInsert(String className, Field[] declaredFields, List<Object> actualFields) throws PersistenceException {
-        String insertString = "INSERT INTO " + className+"(%s) VALUES (%s)";
-        List<Field> declaredFieldsList= new ArrayList<>();
 
-        for(int i = 0;i<actualFields.size();i++){
-            declaredFieldsList.add(declaredFields[i]);
+
+
+
+    private void updateClassId(Object entity,long id){
+        try {
+            Field idField =  entity.getClass().getDeclaredField("id");
+            idField.setAccessible(true);
+            idField.set(entity,id);
+
+        } catch (NoSuchFieldException e) {
+            throw new PersistenceException(e);
+        } catch (IllegalAccessException e) {
+            throw new PersistenceException(e);
         }
-
-        actualFields.remove(0);
-        declaredFieldsList.remove(0);
-
-        String declaredFieldsString = buildSqlInsertDeclared(declaredFieldsList);
-        String actualFieldsString = buildSqlInsertActual(actualFields);
-
-        insertString = String.format(insertString,declaredFieldsString,actualFieldsString);
-        return insertString;
-
-    }
-
-    String buildSqlInsertDeclared(List<Field> fields){
-        String collString = "";
-        for(int i = 0; i<fields.size();i++){
-            collString = collString+fields.get(i).getName();
-            if(i != fields.size()-1) collString = collString+", ";
-        }
-        return collString;
-    }
-
-    String buildSqlInsertActual(List<Object> actualFields) throws PersistenceException {
-        String actualFieldsString = " ";
-        String value;
-        int counter = 0;
-        for(Object actualField : actualFields){
-
-            System.out.println(actualField.toString());
-            try{
-                Field field = actualField.getClass().getDeclaredField("id");
-                field.setAccessible(true);
-                value = field.get(actualField).toString();
-
-
-            } catch (NoSuchFieldException e) {
-                value = actualField.toString();
-            } catch (IllegalAccessException e) {
-                throw new PersistenceException(e);
-            }
-            if(counter == actualFields.size()-1) actualFieldsString = actualFieldsString + "'"+value+"'";
-            else actualFieldsString = actualFieldsString + "'" + value + "',";
-            counter = counter+1;
-
-        }
-        return actualFieldsString;
-    }
-
-
-
-    void getId(Object entity){
-
-    }
-    void updateClassId(Object entity,long id){
 
     }
 }
