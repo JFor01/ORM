@@ -131,9 +131,9 @@ public class ReflectivePersistenceManager implements PersistenceManager {
                     sqlType = type;
                 }
                 String fieldname = fieldTypes.get(i).getFirst();
-                if(i == 0) {collumString = collumString + fieldname + " " + sqlType + " PRIMARY KEY AUTOINCREMENT,\n";}
-                else if(i==fieldTypes.size()-1){collumString = collumString + fieldname + " " + sqlType ;}
-                else {collumString = collumString + fieldname + " " + sqlType + ",\n";}
+                if(i == 0) {collumString = collumString + "'"+ fieldname + "' " + sqlType + " PRIMARY KEY AUTOINCREMENT,\n";}
+                else if(i==fieldTypes.size()-1){collumString = collumString + "'"+ fieldname + "' " + sqlType ;}
+                else {collumString = collumString +  "'"+ fieldname + "' " + sqlType + ",\n";}
             }
             System.out.println(collumString);
             for(String foreignKey : foreignKeys){
