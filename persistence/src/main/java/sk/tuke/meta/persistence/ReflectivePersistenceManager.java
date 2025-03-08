@@ -114,8 +114,8 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
     public List<String> getSqlStrings(HashMap<String, List<Pair<String,Class<?>>>> classFields){
         List<String> createTableSqlStrings = new ArrayList<String>();
-        List<String> foreignKeys = new ArrayList<>();
         for (String className : classFields.keySet()) {
+            List<String> foreignKeys = new ArrayList<>();
             String createTableSqlString = "CREATE TABLE IF NOT EXISTS ";
             List<Pair<String,Class<?>>> fieldTypes = classFields.get(className);
             createTableSqlString = createTableSqlString + "'"+className+"'" + " (%s)";
@@ -143,6 +143,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
                 collumString = collumString + ",\nFOREIGN KEY (" +foreignKey+") REFERENCES " + foreignKey + "(id)";
             }
             createTableSqlString = String.format(createTableSqlString,collumString);
+            System.out.println(createTableSqlString);
             createTableSqlStrings.add(createTableSqlString);
         }
         return createTableSqlStrings;

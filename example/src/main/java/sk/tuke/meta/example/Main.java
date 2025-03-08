@@ -16,7 +16,7 @@ public class Main {
 
         PersistenceManager manager = new ReflectivePersistenceManager(conn);
 
-        manager.createTables(Person.class, Department.class);
+        manager.createTables(Person.class, Department.class, Author.class);
 
         exampleOperations(manager);
 
@@ -28,6 +28,11 @@ public class Main {
         manager.save(development);
 
         Person hrasko = new Person("Janko", "Hrasko", 30);
+
+        Author juraj = new Author("Juraj",hrasko);
+
+
+
         hrasko.setDepartment(development);
         manager.save(hrasko);
         hrasko.setAge(4);
