@@ -58,40 +58,19 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
     @Override
     public void save(Object entity) throws PersistenceException {
-        String className = entity.getClass().getSimpleName();
-        List<Object> actualFieldsObj = new ArrayList<>();
-        Field[] declaredFields = entity.getClass().getDeclaredFields();
-        ResultSet generatedKeys;
-        for(Field field : declaredFields){
-            try {
-                field.setAccessible(true);
-                actualFieldsObj.add(field.get(entity));
-            } catch (IllegalAccessException e) {
-                throw new PersistenceException(e);
-            }
-        }
-        String insertString = SqlBuilder.buildSqlInsert(className,declaredFields,actualFieldsObj);
-        System.out.println(insertString);
-       try {
-            PreparedStatement statement = connection.prepareStatement(insertString,PreparedStatement.RETURN_GENERATED_KEYS);
-            statement.executeUpdate();
-            generatedKeys = statement.getGeneratedKeys();
-        } catch (SQLException e) {
-            throw new PersistenceException(e);
-        }
 
-        long id = 0;
         try {
-            id = generatedKeys.getLong(1);
-        } catch (SQLException e) {
+            Field field = entity.getClass().getDeclaredField("id");
+            field.setAccessible(true);
+            String idString = field.get(entity).toString();
+            long id =Long.parseLong(idString);
+            if(id == 0) insert(entity);
+            else update(entity,id);
+        } catch (NoSuchFieldException e) {
+            throw new PersistenceException(e);
+        } catch (IllegalAccessException e) {
             throw new PersistenceException(e);
         }
-
-        String selectIdQuery;
-
-       System.out.println(id);
-
-       updateClassId(entity,id);
 
     }
 
@@ -183,6 +162,116 @@ public class ReflectivePersistenceManager implements PersistenceManager {
             throw new PersistenceException(e);
         }
 
+    }
+
+    private void insert(Object entity){
+        String className = entity.getClass().getSimpleName();
+        List<Object> actualFieldsObj = new ArrayList<>();
+        Field[] declaredFields = entity.getClass().getDeclaredFields();
+        ResultSet generatedKeys;
+        for(Field field : declaredFields){
+            try {
+                field.setAccessible(true);
+                actualFieldsObj.add(field.get(entity));
+            } catch (IllegalAccessException e) {
+                throw new PersistenceException(e);
+            }
+        }
+        String insertString = SqlBuilder.buildSqlInsert(className,declaredFields,actualFieldsObj);
+        System.out.println(insertString);
+        try {
+            PreparedStatement statement = connection.prepareStatement(insertString,PreparedStatement.RETURN_GENERATED_KEYS);
+            statement.executeUpdate();
+            generatedKeys = statement.getGeneratedKeys();
+        } catch (SQLException e) {
+            throw new PersistenceException(e);
+        }
+
+        long id = 0;
+        try {
+            id = generatedKeys.getLong(1);
+        } catch (SQLException e) {
+            throw new PersistenceException(e);
+        }
+
+
+        System.out.println(id);
+
+        updateClassId(entity,id);
+    }
+
+    private void update(Object entity,long id) throws PersistenceException{
+        String name = entity.getClass().getSimpleName();
+        String strId = Long.toString(id);
+        List<String> declaredFields = getDeclaredFields(entity);
+        List<String> actualFields = getActualFields(entity);
+
+        String sqlQuerry = "UPDATE " + name + " SET %s \nWHERE " + name+".id == " + strId;
+        String dataString = formatDataUpdate(declaredFields,actualFields);
+        sqlQuerry = String.format(sqlQuerry,dataString);
+
+        System.out.println("Printing sql queryy");
+        System.out.println(sqlQuerry);
+        try {
+            PreparedStatement statement = connection.prepareStatement(sqlQuerry);
+            statement.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new PersistenceException(e);
+        }
+
+
+
+    }
+
+    private List<String> getDeclaredFields(Object entity){
+        List<String> declaredFieldsList = new ArrayList<>();
+        Field[] declaredFields = entity.getClass().getDeclaredFields();
+        for(Field field : declaredFields){
+            declaredFieldsList.add(field.getName());
+        }
+
+        return declaredFieldsList;
+    }
+    private List<String> getActualFields(Object entity){
+        List<Object> actualFieldsObj = new ArrayList<>();
+        List<String> actualFieldsList = new ArrayList<>();
+        Field[] declaredFields = entity.getClass().getDeclaredFields();
+        for(Field field : declaredFields){
+            try {
+                field.setAccessible(true);
+                actualFieldsObj.add(field.get(entity));
+            } catch (IllegalAccessException e) {
+                throw new PersistenceException(e);
+            }
+        }
+
+        for(Object actualFieldObject : actualFieldsObj){
+            try {
+                Class<?> aclass = actualFieldObject.getClass();
+                Field field = aclass.getDeclaredField("id");
+                field.setAccessible(true);
+                actualFieldsList.add(field.get(actualFieldObject).toString());
+
+            } catch (NoSuchFieldException e) {
+                actualFieldsList.add(actualFieldObject.toString());
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return actualFieldsList;
+    }
+
+    private String formatDataUpdate(List<String> declaredFields, List<String> actualFields){
+        if (declaredFields.size()!= actualFields.size()) throw new PersistenceException("Declared fields and actual fields have to match in size");
+        String dataString = "";
+        for (int i = 0;i<declaredFields.size();i++){
+            if (i != declaredFields.size()-1) dataString = dataString+declaredFields.get(i) + " = " +"'" + actualFields.get(i)+ "'" + ",";
+            else dataString = dataString+declaredFields.get(i) + " = " +"'" + actualFields.get(i) + "'";
+        }
+
+        return dataString;
     }
 }
 

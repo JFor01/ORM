@@ -30,6 +30,8 @@ public class Main {
         Person hrasko = new Person("Janko", "Hrasko", 30);
         hrasko.setDepartment(development);
         manager.save(hrasko);
+        hrasko.setAge(4);
+        manager.save(hrasko);
 
         List<Person> persons = manager.getAll(Person.class);
         for (Person person : persons) {

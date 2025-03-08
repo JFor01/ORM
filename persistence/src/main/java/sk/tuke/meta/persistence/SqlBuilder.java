@@ -24,6 +24,7 @@ public class SqlBuilder {
 
     }
 
+
    static private String buildSqlInsertDeclared(List<Field> fields){
         String collString = "";
         for(int i = 0; i<fields.size();i++){
