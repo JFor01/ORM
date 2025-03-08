@@ -100,11 +100,13 @@ public class ReflectivePersistenceManager implements PersistenceManager {
     private String convertJavaTypesToSql(Class<?> javaType)  {
         String sqltype;
         switch (javaType.getSimpleName()) {
-            case "long", "int": return "INTEGER";
+            case "long", "int","byte","short": return "INTEGER";
             case "String" : return "TEXT";
             case "float", "double": return "REAL";
             default:
                 sqltype = "FOREIGN:" +javaType.getSimpleName()+":INTEGER";
+                System.out.println("EROOOR");
+                System.out.println("Somehow you managed to turn proper field into foreign key");
             }
         return sqltype;
 
