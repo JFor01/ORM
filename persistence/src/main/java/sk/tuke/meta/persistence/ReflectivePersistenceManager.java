@@ -8,6 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.Optional;
 
 public class ReflectivePersistenceManager implements PersistenceManager {
     private final Connection connection;
@@ -167,38 +168,37 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
     private void insert(Object entity){
         String className = entity.getClass().getSimpleName();
-        List<Object> actualFieldsObj = new ArrayList<>();
-        Field[] declaredFields = entity.getClass().getDeclaredFields();
-        ResultSet generatedKeys;
-        for(Field field : declaredFields){
-            try {
-                field.setAccessible(true);
-                actualFieldsObj.add(field.get(entity));
-            } catch (IllegalAccessException e) {
-                throw new PersistenceException(e);
-            }
-        }
-        String insertString = SqlBuilder.buildSqlInsert(className,declaredFields,actualFieldsObj);
+        String insertString = "INSERT INTO " + className+"(%s) VALUES (%s)";
+        Optional<ResultSet> generatedKeys;
+        List<String> declaredFields = getDeclaredFields(entity);
+        List<FieldTypeAndValue> actualFields= getActualFields(entity);
+
+        //Getting rid of the unnecessary id
+        declaredFields.remove(0);
+        actualFields.remove(0);
+
+        String dataString = formatInsertString(declaredFields);
+        String dataString2 = formatInsertStringTokens(declaredFields.size());
+        insertString = String.format(insertString,dataString,dataString2);
+        System.out.println(dataString);
+        System.out.println(dataString2);
         System.out.println(insertString);
-        try {
-            PreparedStatement statement = connection.prepareStatement(insertString,PreparedStatement.RETURN_GENERATED_KEYS);
-            statement.executeUpdate();
-            generatedKeys = statement.getGeneratedKeys();
-        } catch (SQLException e) {
-            throw new PersistenceException(e);
-        }
+
+        generatedKeys = executeQuery(insertString,actualFields,PreparedStatement.RETURN_GENERATED_KEYS);
 
         long id = 0;
         try {
-            id = generatedKeys.getLong(1);
+            if(generatedKeys.isPresent())id = generatedKeys.get().getLong(1);
         } catch (SQLException e) {
             throw new PersistenceException(e);
         }
-
 
         System.out.println(id);
 
         updateClassId(entity,id);
+
+
+
     }
 
     private void update(Object entity,long id) throws PersistenceException{
@@ -215,29 +215,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
         System.out.println(sqlQuerry);
 
-        try {
-            PreparedStatement statement = connection.prepareStatement(sqlQuerry);
-            int index = 1;
-            for(FieldTypeAndValue actualField : actualFields){
-                String type = actualField.getType();
-                switch (type){
-                    case "java.lang.Integer" : statement.setInt(index,Integer.parseInt(actualField.getValue()));
-                    break;
-                    case "java.lang.String" : statement.setString(index,actualField.getValue());
-                    break;
-                    case "java.lang.Long" : statement.setLong(index,Long.parseLong(actualField.getValue()));
-                    break;
-                    case "java.lang.Float" : statement.setFloat(index,Float.parseFloat(actualField.getValue()));
-                    break;
-                    case "java.lang.Double" : statement.setDouble(index,Double.parseDouble(actualField.getValue()));
-                }
-                index++;
-            }
-            statement.executeUpdate();
-
-        } catch (SQLException e) {
-            throw new PersistenceException(e);
-        }
+        executeQuery(sqlQuerry,actualFields,PreparedStatement.NO_GENERATED_KEYS);
 
 
 
@@ -299,6 +277,56 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         }
 
         return dataString;
+    }
+    private String formatInsertString(List<String> declaredFields){
+        String dataString = "";
+        for (int i = 0;i<declaredFields.size();i++){
+            if (i != declaredFields.size()-1) dataString = dataString+declaredFields.get(i) + ",";
+            else dataString = dataString+declaredFields.get(i) ;
+        }
+        return dataString;
+    }
+
+    private String formatInsertStringTokens(int size){
+        String dataString = "";
+        for (int i = 0;i<size;i++){
+            if (i != size-1) dataString = dataString+ "?,";
+            else dataString = dataString+ "?";
+        }
+        return dataString;
+    }
+
+    private Optional<ResultSet> executeQuery(String sqlQuerry,List<FieldTypeAndValue> actualFields,int returnGeneratedKeys){
+        Optional<ResultSet> resultSetOptional;
+        try {
+            PreparedStatement statement = connection.prepareStatement(sqlQuerry,returnGeneratedKeys);
+            int index = 1;
+            for(FieldTypeAndValue actualField : actualFields){
+                String type = actualField.getType();
+                switch (type){
+                    case "java.lang.Integer" : statement.setInt(index,Integer.parseInt(actualField.getValue()));
+                        break;
+                    case "java.lang.String" : statement.setString(index,actualField.getValue());
+                        break;
+                    case "java.lang.Long" : statement.setLong(index,Long.parseLong(actualField.getValue()));
+                        break;
+                    case "java.lang.Float" : statement.setFloat(index,Float.parseFloat(actualField.getValue()));
+                        break;
+                    case "java.lang.Double" : statement.setDouble(index,Double.parseDouble(actualField.getValue()));
+                }
+                index++;
+            }
+            try {
+                statement.executeUpdate();
+                resultSetOptional = Optional.of(statement.getGeneratedKeys());
+            }catch (SQLException e ){
+                resultSetOptional = Optional.empty();
+            }
+
+        } catch (SQLException e) {
+            throw new PersistenceException(e);
+        }
+        return resultSetOptional;
     }
 }
 

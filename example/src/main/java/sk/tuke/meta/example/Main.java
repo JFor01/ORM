@@ -29,7 +29,7 @@ public class Main {
 
         Person hrasko = new Person("Janko", "Hrasko", 30);
 
-        Author juraj = new Author("Juraj",hrasko);
+        Author juraj = new Author("'??'*';'",hrasko);
 
 
 
@@ -38,6 +38,7 @@ public class Main {
         hrasko.setAge(46);
         hrasko.setName("O'ryley'");
         manager.save(hrasko);
+        manager.save(juraj);
 
         List<Person> persons = manager.getAll(Person.class);
         for (Person person : persons) {
