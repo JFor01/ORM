@@ -35,7 +35,8 @@ public class Main {
 
         hrasko.setDepartment(development);
         manager.save(hrasko);
-        hrasko.setAge(4);
+        hrasko.setAge(46);
+        hrasko.setName("O'ryley'");
         manager.save(hrasko);
 
         List<Person> persons = manager.getAll(Person.class);

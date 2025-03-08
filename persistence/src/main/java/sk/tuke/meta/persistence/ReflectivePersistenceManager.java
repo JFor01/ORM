@@ -205,16 +205,34 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         String name = entity.getClass().getSimpleName();
         String strId = Long.toString(id);
         List<String> declaredFields = getDeclaredFields(entity);
-        List<String> actualFields = getActualFields(entity);
+        List<FieldTypeAndValue> actualFields = getActualFields(entity);
 
         String sqlQuerry = "UPDATE " + name + " SET %s \nWHERE " + name+".id == " + strId;
-        String dataString = formatDataUpdate(declaredFields,actualFields);
+        String dataString = formatDataUpdate(declaredFields);
         sqlQuerry = String.format(sqlQuerry,dataString);
 
         System.out.println("Printing sql queryy");
+
         System.out.println(sqlQuerry);
+
         try {
             PreparedStatement statement = connection.prepareStatement(sqlQuerry);
+            int index = 1;
+            for(FieldTypeAndValue actualField : actualFields){
+                String type = actualField.getType();
+                switch (type){
+                    case "java.lang.Integer" : statement.setInt(index,Integer.parseInt(actualField.getValue()));
+                    break;
+                    case "java.lang.String" : statement.setString(index,actualField.getValue());
+                    break;
+                    case "java.lang.Long" : statement.setLong(index,Long.parseLong(actualField.getValue()));
+                    break;
+                    case "java.lang.Float" : statement.setFloat(index,Float.parseFloat(actualField.getValue()));
+                    break;
+                    case "java.lang.Double" : statement.setDouble(index,Double.parseDouble(actualField.getValue()));
+                }
+                index++;
+            }
             statement.executeUpdate();
 
         } catch (SQLException e) {
@@ -234,9 +252,9 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
         return declaredFieldsList;
     }
-    private List<String> getActualFields(Object entity){
+    private List<FieldTypeAndValue> getActualFields(Object entity){
         List<Object> actualFieldsObj = new ArrayList<>();
-        List<String> actualFieldsList = new ArrayList<>();
+        List<FieldTypeAndValue> actualFieldsList = new ArrayList<>();
         Field[] declaredFields = entity.getClass().getDeclaredFields();
         for(Field field : declaredFields){
             try {
@@ -246,30 +264,38 @@ public class ReflectivePersistenceManager implements PersistenceManager {
                 throw new PersistenceException(e);
             }
         }
-
+        int index = 0;
+        System.out.println("Printing actual fields");
         for(Object actualFieldObject : actualFieldsObj){
+            FieldTypeAndValue fieldTypeAndValue = new FieldTypeAndValue();
             try {
                 Class<?> aclass = actualFieldObject.getClass();
                 Field field = aclass.getDeclaredField("id");
                 field.setAccessible(true);
-                actualFieldsList.add(field.get(actualFieldObject).toString());
+                fieldTypeAndValue.setValue(field.get(actualFieldObject).toString());
+                fieldTypeAndValue.setType("java.lang.Integer");
+                actualFieldsList.add(fieldTypeAndValue);
 
             } catch (NoSuchFieldException e) {
-                actualFieldsList.add(actualFieldObject.toString());
+                fieldTypeAndValue.setValue(actualFieldObject.toString());
+                fieldTypeAndValue.setType(actualFieldObject.getClass().getTypeName());
+                actualFieldsList.add(fieldTypeAndValue);
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
+            System.out.println(actualFieldsList.get(index).getType());
+            System.out.println(actualFieldsList.get(index).getValue());
+            index++;
         }
 
         return actualFieldsList;
     }
 
-    private String formatDataUpdate(List<String> declaredFields, List<String> actualFields){
-        if (declaredFields.size()!= actualFields.size()) throw new PersistenceException("Declared fields and actual fields have to match in size");
+    private String formatDataUpdate(List<String> declaredFields){
         String dataString = "";
         for (int i = 0;i<declaredFields.size();i++){
-            if (i != declaredFields.size()-1) dataString = dataString+declaredFields.get(i) + " = " +"'" + actualFields.get(i)+ "'" + ",";
-            else dataString = dataString+declaredFields.get(i) + " = " +"'" + actualFields.get(i) + "'";
+            if (i != declaredFields.size()-1) dataString = dataString+declaredFields.get(i) + " =?,";
+            else dataString = dataString+declaredFields.get(i) + " =?";
         }
 
         return dataString;
