@@ -84,33 +84,40 @@ public class ReflectivePersistenceManager implements PersistenceManager {
             case "long", "int": return "INTEGER";
             case "String" : return "TEXT";
             case "float", "double": return "REAL";
-            default:    try {
-                javaType.getField("id");
-                sqltype = "INT";
+            default:
+                sqltype = "FOREIGN:" +javaType.getSimpleName()+":INTEGER";
             }
-            catch(NoSuchFieldException e){
-                sqltype = "INT";
-            }
-        }
         return sqltype;
 
     }
 
     public List<String> getSqlStrings(HashMap<String, List<Pair<String,Class<?>>>> classFields){
         List<String> createTableSqlStrings = new ArrayList<String>();
+        List<String> foreignKeys = new ArrayList<>();
         for (String className : classFields.keySet()) {
             String createTableSqlString = "CREATE TABLE IF NOT EXISTS ";
             List<Pair<String,Class<?>>> fieldTypes = classFields.get(className);
             createTableSqlString = createTableSqlString + className + " (%s)";
             System.out.println(createTableSqlString);
             String collumString = "";
+
             for (int i = 0; i < fieldTypes.size(); i++) {
                 String sqlType = convertJavaTypesToSql(fieldTypes.get(i).getSecond());
+                if (sqlType.startsWith("FOREIGN:")) {
+                    sqlType = sqlType.substring(8);
+                    String name = sqlType.split(":")[0];
+                    String type = sqlType.split(":")[1];
+                    foreignKeys.add(name);
+                    sqlType = type;
+                }
                 String fieldname = fieldTypes.get(i).getFirst();
                 collumString = collumString + fieldname + " " + sqlType + ",\n";
             }
             System.out.println(collumString);
             collumString = collumString + "PRIMARY KEY" + " (" + fieldTypes.get(0).getFirst() + ")\n";
+            for(String foreignKey : foreignKeys){
+                collumString = collumString + "FOREIGN KEY (id) REFERENCES " + foreignKey + "(id)";
+            }
             createTableSqlString = String.format(createTableSqlString,collumString);
             createTableSqlStrings.add(createTableSqlString);
         }
