@@ -118,7 +118,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         for (String className : classFields.keySet()) {
             String createTableSqlString = "CREATE TABLE IF NOT EXISTS ";
             List<Pair<String,Class<?>>> fieldTypes = classFields.get(className);
-            createTableSqlString = createTableSqlString + className + " (%s)";
+            createTableSqlString = createTableSqlString + "'"+className+"'" + " (%s)";
             System.out.println(createTableSqlString);
             String collumString = "";
 
