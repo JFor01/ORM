@@ -105,8 +105,6 @@ public class ReflectivePersistenceManager implements PersistenceManager {
             case "float", "double": return "REAL";
             default:
                 sqltype = "FOREIGN:" +javaType.getSimpleName()+":INTEGER";
-                System.out.println("EROOOR");
-                System.out.println("Somehow you managed to turn proper field into foreign key");
             }
         return sqltype;
 
