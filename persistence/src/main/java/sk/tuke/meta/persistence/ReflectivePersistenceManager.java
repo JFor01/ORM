@@ -68,18 +68,58 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         } catch (InstantiationException | InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
             throw new PersistenceException(e);
         }
+        try {
+            if(!resultSet.next())return Optional.empty();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
 
-        Optional<T> optClassInstance = insertFieldsIntoInstance(resultSet,types,classInstance);
 
-
-
-
-        return optClassInstance;
+        return insertFieldsIntoInstance(resultSet,types,classInstance);
     }
 
     @Override
     public <T> List<T> getAll(Class<T> type) {
-        return Collections.emptyList();
+        String className = type.getSimpleName();
+        String selectQuery = "SELECT * FROM " + "'" + className + "' ";
+        Field[] fields = type.getDeclaredFields();
+        List<String> types = getTypes(fields);
+
+        for(String fieldType :types){
+            System.out.println(fieldType);
+        }
+
+        ResultSet resultSet = null;
+        try {
+            resultSet = connection.prepareStatement(selectQuery).executeQuery();
+        } catch (SQLException e) {
+            throw new PersistenceException(e);
+        }
+
+        List<T> classInstances = new ArrayList<>();
+        while (true) {
+            try {
+                if (!resultSet.next()) break;
+            } catch (SQLException e) {
+                throw new PersistenceException(e);
+            }
+            try {
+                T classInstance = type.getDeclaredConstructor().newInstance();
+                Optional<T> optClassInstance = insertFieldsIntoInstance(resultSet,types,classInstance);
+                classInstances.add(optClassInstance.get());
+            } catch (InstantiationException | InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
+                throw new PersistenceException(e);
+            }
+        }
+
+
+
+
+        System.out.println("Printing all class instances");
+        for(T classInstance :classInstances){
+            System.out.println(classInstance);
+        }
+        return classInstances;
     }
 
     @Override
@@ -376,18 +416,11 @@ public class ReflectivePersistenceManager implements PersistenceManager {
     }
 
     private <T> Optional<T> insertFieldsIntoInstance(ResultSet resultSet, List<String> types,T classInstance ){
-        boolean hasNext;
-        try {
-           hasNext = resultSet.next();
-        } catch (SQLException e) {
-            throw new PersistenceException(e);
-        }
 
         Class<?> clasReflexion = classInstance.getClass();
         List<Integer> positions;
         positions = getReferencePosition(clasReflexion);
 
-        if(!hasNext)return Optional.empty();
             try{
                 int index = 1;
                 for (String type : types) {
