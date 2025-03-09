@@ -27,13 +27,15 @@ public class Main {
         Department development = new Department("Development", "DVLP");
         manager.save(development);
 
+        Department it = new Department("it","IT");
+
         Person hrasko = new Person("Janko", "Hrasko", 30);
 
         Author juraj = new Author("'??'*';'",hrasko);
 
 
-
-        hrasko.setDepartment(development);
+        manager.save(it);
+        hrasko.setDepartment(it);
         manager.save(hrasko);
         hrasko.setAge(46);
         hrasko.setName("O'ryley'");

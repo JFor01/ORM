@@ -250,7 +250,9 @@ public class ReflectivePersistenceManager implements PersistenceManager {
                 Class<?> aclass = actualFieldObject.getClass();
                 Field field = aclass.getDeclaredField("id");
                 field.setAccessible(true);
-                fieldTypeAndValue.setValue(field.get(actualFieldObject).toString());
+                String value = field.get(actualFieldObject).toString();
+                if(Integer.parseInt(value) == 0) throw new PersistenceException("You have to save reference to the table first");
+                fieldTypeAndValue.setValue(value);
                 fieldTypeAndValue.setType("java.lang.Integer");
                 actualFieldsList.add(fieldTypeAndValue);
 
