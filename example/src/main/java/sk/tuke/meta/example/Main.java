@@ -47,7 +47,8 @@ public class Main {
             System.out.println(person);
             System.out.println("  " + person.getDepartment());
         }
-        Optional<Department> anotherDepartment = manager.get(Department.class, 100);
+        Optional<Department> anotherDepartment = manager.get(Department.class, 1);
         System.out.println(anotherDepartment.isPresent());
+        anotherDepartment.ifPresent(department -> System.out.println(department.getName()));
     }
 }

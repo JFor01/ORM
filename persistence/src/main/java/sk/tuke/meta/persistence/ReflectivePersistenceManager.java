@@ -2,6 +2,7 @@ package sk.tuke.meta.persistence;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.security.KeyPair;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -49,8 +50,31 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
     @Override
     public <T> Optional<T> get(Class<T> type, long id) {
+        String className = type.getSimpleName();
+        String selectQuery = "SELECT * FROM " + "'" + className + "' " + " WHERE ID = (?)";
+        Field[] fields = type.getDeclaredFields();
+        List<String> types = getTypes(fields);
 
-        return Optional.empty();
+        for(String fieldType :types){
+            System.out.println(fieldType);
+        }
+
+        ResultSet resultSet = executeGetQuery(selectQuery,id);
+
+        T classInstance;
+        try {
+            classInstance = type.getDeclaredConstructor().newInstance();
+        } catch (InstantiationException | InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
+            throw new PersistenceException(e);
+        }
+
+        Optional<T> optClassInstance = insertFieldsIntoInstance(resultSet,types,classInstance);
+
+
+
+
+
+        return optClassInstance;
     }
 
     @Override
@@ -331,5 +355,76 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         }
         return resultSetOptional;
     }
+
+    private List<String>getTypes(Field[] fields){
+        List<String> types = new ArrayList<>();
+        for(Field field : fields){
+            types.add(field.getType().getSimpleName());
+        }
+
+        return types;
+    }
+
+
+    private ResultSet executeGetQuery(String selectQuery, long id){
+        ResultSet resultSet;
+        try {
+            PreparedStatement statement = connection.prepareStatement(selectQuery);
+            statement.setLong(1,id);
+            resultSet = statement.executeQuery();
+        } catch (SQLException e) {
+            throw new PersistenceException(e);
+        }
+
+        return resultSet;
+    }
+
+    private <T> Optional<T> insertFieldsIntoInstance(ResultSet resultSet, List<String> types,T classInstance ){
+        Optional<T> optClassInstance;
+        try {
+            resultSet.next();
+        } catch (SQLException e) {
+            optClassInstance = Optional.empty();
+        }
+            try{
+                int index = 1;
+                for (String type : types) {
+                    switch (type) {
+                        case "long": insertValueIntoInstance(resultSet.getLong(index),classInstance,index-1);
+                        break;
+                        case "String" : insertValueIntoInstance(resultSet.getString(index),classInstance,index-1);
+
+                        break;
+                        case "int" : insertValueIntoInstance(resultSet.getInt(index),classInstance,index-1);
+                        break;
+                        case "float" : insertValueIntoInstance(resultSet.getFloat(index),classInstance,index-1);
+                        break;
+                        case "double" : insertValueIntoInstance(resultSet.getDouble(index),classInstance,index-1);
+                        default: System.out.println("You need to check type conversion");
+                    }
+                    index++;
+                }
+            } catch (SQLException e) {
+                throw new PersistenceException(e);
+            }
+
+
+        return Optional.of(classInstance);
+    }
+
+    private <T,F> void insertValueIntoInstance(F value, T classInstance,int fieldIndex) {
+        Field[] fields = classInstance.getClass().getDeclaredFields();
+        Field field = fields[fieldIndex];
+        field.setAccessible(true);
+        try {
+            field.set(classInstance,value);
+        } catch (IllegalAccessException e) {
+            throw new PersistenceException(e);
+            }
+        }
+
+
+
+
 }
 
