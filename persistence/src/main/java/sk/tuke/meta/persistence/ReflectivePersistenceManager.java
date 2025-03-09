@@ -140,6 +140,25 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
     @Override
     public void delete(Object entity) {
+        String name = entity.getClass().getSimpleName();
+        long id;
+        try {
+            Field field = entity.getClass().getDeclaredField("id");
+            field.setAccessible(true);
+             id = (long)field.get(entity);
+        } catch (NoSuchFieldException e) {
+            throw new PersistenceException(e);
+        } catch (IllegalAccessException e) {
+            throw new PersistenceException(e);
+        }
+        if(id==0)throw new PersistenceException("You can only delete savde objects");
+        String idString = Long.toString(id);
+        String sqlStatement = "DELETE FROM " + "'" + name + "'" + " WHERE id=" +idString;
+        try {
+            connection.prepareStatement(sqlStatement).executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
