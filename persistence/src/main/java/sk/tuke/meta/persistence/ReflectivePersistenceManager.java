@@ -49,6 +49,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
     @Override
     public <T> Optional<T> get(Class<T> type, long id) {
+
         return Optional.empty();
     }
 
@@ -168,7 +169,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
     private void insert(Object entity){
         String className = entity.getClass().getSimpleName();
-        String insertString = "INSERT INTO " + className+"(%s) VALUES (%s)";
+        String insertString = "INSERT INTO " + "'" + className+ "'"+ "(%s) VALUES (%s)";
         Optional<ResultSet> generatedKeys;
         List<String> declaredFields = getDeclaredFields(entity);
         List<FieldTypeAndValue> actualFields= getActualFields(entity);
@@ -207,7 +208,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         List<String> declaredFields = getDeclaredFields(entity);
         List<FieldTypeAndValue> actualFields = getActualFields(entity);
 
-        String sqlQuerry = "UPDATE " + name + " SET %s \nWHERE " + name+".id == " + strId;
+        String sqlQuerry = "UPDATE " + "'" + name + "'" + " SET %s \nWHERE " + name+".id == " + strId;
         String dataString = formatDataUpdate(declaredFields);
         sqlQuerry = String.format(sqlQuerry,dataString);
 
