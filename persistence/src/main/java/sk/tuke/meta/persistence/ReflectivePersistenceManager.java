@@ -287,7 +287,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         List<String> declaredFields = getDeclaredFields(entity);
         List<FieldTypeAndValue> actualFields = getActualFields(entity);
 
-        String sqlQuerry = "UPDATE " + "'" + name + "'" + " SET %s \nWHERE " + name+".id == " + strId;
+        String sqlQuerry = "UPDATE " + "'" + name + "'" + " SET %s \nWHERE " + "'" + name + "'"+".id == " + strId;
         String dataString = formatDataUpdate(declaredFields);
         sqlQuerry = String.format(sqlQuerry,dataString);
 
@@ -341,7 +341,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
                 fieldTypeAndValue.setType(actualFieldObject.getClass().getTypeName());
                 actualFieldsList.add(fieldTypeAndValue);
             } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
+                throw new PersistenceException(e);
             }
             System.out.println(actualFieldsList.get(index).getType());
             System.out.println(actualFieldsList.get(index).getValue());
@@ -460,7 +460,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
                         case "float" : insertValueIntoInstance(resultSet.getFloat(index),classInstance,index-1);
                         break;
                         case "double" : insertValueIntoInstance(resultSet.getDouble(index),classInstance,index-1);
-                        default: System.out.println("You need to check type conversion");
+                        default: throw new PersistenceException("Type not supported");
                     }
                     index++;
                 }
