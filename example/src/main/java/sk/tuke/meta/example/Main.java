@@ -24,31 +24,34 @@ public class Main {
     }
 
     private static void exampleOperations(PersistenceManager manager) {
-        Department development = new Department("Development", "DVLP");
-        manager.save(development);
 
         Department it = new Department("it","IT");
 
         Person hrasko = new Person("Janko", "Hrasko", 30);
+        hrasko.setDepartment(it);
 
-        Author juraj = new Author("'??'*';'",hrasko);
-
+        Author juraj = new Author("'??'*';'",hrasko,it);
 
         manager.save(it);
-        hrasko.setDepartment(it);
-        manager.save(hrasko);
-        hrasko.setAge(46);
-        hrasko.setName("O'ryley'");
         manager.save(hrasko);
         manager.save(juraj);
+
+
 
         List<Person> persons = manager.getAll(Person.class);
         for (Person person : persons) {
             System.out.println(person);
             System.out.println("  " + person.getDepartment());
         }
-        Optional<Department> anotherDepartment = manager.get(Department.class, 1);
-        System.out.println(anotherDepartment.isPresent());
-        anotherDepartment.ifPresent(department -> System.out.println(department.getName()));
+
+        System.out.println("Printing author");
+        Optional<Author> authorOptional = manager.get(Author.class,1);
+        Author author = authorOptional.get();
+        System.out.println(author.getId());
+        System.out.println(author.getName());
+        System.out.println(author.getPerson());
+        System.out.println(author.getDepartment());
+        System.out.println(author.getPerson().getId());
+        System.out.println(author.getDepartment().getCode());
     }
 }

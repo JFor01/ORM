@@ -1,5 +1,6 @@
 package sk.tuke.meta.persistence;
 
+import javax.swing.text.Position;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -73,7 +74,6 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
 
 
-
         return optClassInstance;
     }
 
@@ -92,9 +92,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
             long id =Long.parseLong(idString);
             if(id == 0) insert(entity);
             else update(entity,id);
-        } catch (NoSuchFieldException e) {
-            throw new PersistenceException(e);
-        } catch (IllegalAccessException e) {
+        } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new PersistenceException(e);
         }
 
@@ -183,9 +181,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
             idField.setAccessible(true);
             idField.set(entity,id);
 
-        } catch (NoSuchFieldException e) {
-            throw new PersistenceException(e);
-        } catch (IllegalAccessException e) {
+        } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new PersistenceException(e);
         }
 
@@ -380,15 +376,27 @@ public class ReflectivePersistenceManager implements PersistenceManager {
     }
 
     private <T> Optional<T> insertFieldsIntoInstance(ResultSet resultSet, List<String> types,T classInstance ){
-        Optional<T> optClassInstance;
+        boolean hasNext;
         try {
-            resultSet.next();
+           hasNext = resultSet.next();
         } catch (SQLException e) {
-            optClassInstance = Optional.empty();
+            throw new PersistenceException(e);
         }
+
+        Class<?> clasReflexion = classInstance.getClass();
+        List<Integer> positions;
+        positions = getReferencePosition(clasReflexion);
+
+        if(!hasNext)return Optional.empty();
             try{
                 int index = 1;
                 for (String type : types) {
+                    if(checkIndexAgainstPositions(positions,index-1)){
+                        insertNewReferenceIntoInstance(classInstance,index-1,resultSet.getInt(index));
+                        index++;
+                        continue;
+                    }
+
                     switch (type) {
                         case "long": insertValueIntoInstance(resultSet.getLong(index),classInstance,index-1);
                         break;
@@ -408,7 +416,6 @@ public class ReflectivePersistenceManager implements PersistenceManager {
                 throw new PersistenceException(e);
             }
 
-
         return Optional.of(classInstance);
     }
 
@@ -422,6 +429,69 @@ public class ReflectivePersistenceManager implements PersistenceManager {
             throw new PersistenceException(e);
             }
         }
+
+
+        private boolean hasReference(Class<?> cls ){
+
+            Field[] fields = cls.getDeclaredFields();
+            for(Field field : fields){
+                try{
+                    field.getType().getDeclaredField("id");
+                    return true;
+                } catch (NoSuchFieldException e) {
+                }
+            }
+            return false;
+        }
+
+        private Optional<Class<?>> getReference(Class<?> cls){
+
+        Field[] fields = cls.getDeclaredFields();
+        for(Field field : fields){
+            try{
+                field.getType().getDeclaredField("id");
+                return Optional.of(field.getClass());
+            } catch (NoSuchFieldException e) {
+            }
+        }
+        return Optional.empty();
+    }
+
+    private List<Integer> getReferencePosition(Class<?> cls){
+        List<Integer> positions = new ArrayList<>();
+        Field[] fields = cls.getDeclaredFields();
+        Integer index = 0;
+        for(Field field : fields){
+            try{
+                field.getType().getDeclaredField("id");
+                positions.add(index);
+            } catch (NoSuchFieldException e) {
+            }
+            index++;
+        }
+        return positions;
+    }
+
+    private boolean checkIndexAgainstPositions(List<Integer> positions, Integer index){
+        for(Integer position : positions){
+            if (index == position) return true;
+        }
+        return false;
+    }
+
+
+    private <T> void insertNewReferenceIntoInstance(T classInstance, Integer index, Integer id ){
+        Field affectedField = classInstance.getClass().getDeclaredFields()[index];
+        affectedField.setAccessible(true);
+        Class<?> fieldClass = affectedField.getType();
+        try {
+           Optional<?> newReference = get(fieldClass,id);
+            affectedField.set(classInstance,newReference.get());
+        } catch (IllegalAccessException e) {
+            throw new PersistenceException(e);
+        }
+    }
+
 
 
 

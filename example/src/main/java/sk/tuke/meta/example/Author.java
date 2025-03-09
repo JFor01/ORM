@@ -5,10 +5,15 @@ public class Author {
     private String name;
 
     private Person person;
+    private Department department;
 
-    public Author(String name, Person person){
+    public Author(){
+
+    }
+    public Author(String name, Person person, Department department){
         this.name = name;
         this.person = person;
+        this.department = department;
     }
     public long getId(){
         return this.id;
@@ -28,4 +33,7 @@ public class Author {
     public void setPerson(Person person) {
         this.person = person;
     }
+
+    public Department getDepartment(){return department;}
+    void setDepartment(Department department){this.department = department;}
 }
