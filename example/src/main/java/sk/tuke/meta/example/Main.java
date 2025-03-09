@@ -36,6 +36,9 @@ public class Main {
         manager.save(hrasko);
         manager.save(juraj);
 
+        juraj.setName("not Juraj");
+        manager.save(juraj);
+
 
 
         List<Person> persons = manager.getAll(Person.class);

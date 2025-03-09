@@ -354,8 +354,8 @@ public class ReflectivePersistenceManager implements PersistenceManager {
     private String formatDataUpdate(List<String> declaredFields){
         String dataString = "";
         for (int i = 0;i<declaredFields.size();i++){
-            if (i != declaredFields.size()-1) dataString = dataString+declaredFields.get(i) + " =?,";
-            else dataString = dataString+declaredFields.get(i) + " =?";
+            if (i != declaredFields.size()-1) dataString =   dataString+ "'" +declaredFields.get(i) + "'"  + "=?,";
+            else dataString = dataString+"'" + declaredFields.get(i) + "'" + " =?";
         }
 
         return dataString;
@@ -363,8 +363,8 @@ public class ReflectivePersistenceManager implements PersistenceManager {
     private String formatInsertString(List<String> declaredFields){
         String dataString = "";
         for (int i = 0;i<declaredFields.size();i++){
-            if (i != declaredFields.size()-1) dataString = dataString+declaredFields.get(i) + ",";
-            else dataString = dataString+declaredFields.get(i) ;
+            if (i != declaredFields.size()-1) dataString = dataString+"'" + declaredFields.get(i) + "'" + ",";
+            else dataString = dataString+ "'" + declaredFields.get(i) + "'" ;
         }
         return dataString;
     }
