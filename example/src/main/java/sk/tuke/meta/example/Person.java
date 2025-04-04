@@ -1,8 +1,12 @@
 package sk.tuke.meta.example;
 
+import sk.tuke.meta.annotations.Id;
+
 public class Person {
-    private long id;
+
     private String surname;
+    @Id
+    private long Id;
     private String name;
     private int age;
 
@@ -18,7 +22,7 @@ public class Person {
     }
 
     public long getId() {
-        return id;
+        return Id;
     }
 
     public String getSurname() {
@@ -55,6 +59,6 @@ public class Person {
 
     @Override
     public String toString() {
-        return String.format("Person %d: %s %s (%d)", id, surname, name, age);
+        return String.format("Person %d: %s %s (%d)", Id, surname, name, age);
     }
 }

@@ -29,29 +29,9 @@ public class Main {
 
         Person hrasko = new Person("Janko", "Hrasko", 30);
         hrasko.setDepartment(it);
-
-        Author juraj = new Author("'??'*';'",hrasko,it);
-
-        manager.save(it);
-        manager.save(hrasko);
-        manager.save(juraj);
+        //manager.save(it);
+        //manager.save(hrasko);
 
 
-
-        List<Person> persons = manager.getAll(Person.class);
-        for (Person person : persons) {
-            System.out.println(person);
-            System.out.println("  " + person.getDepartment());
-        }
-
-        System.out.println("Printing author");
-        Optional<Author> authorOptional = manager.get(Author.class,1);
-        Author author = authorOptional.get();
-        System.out.println(author.getId());
-        System.out.println(author.getName());
-        System.out.println(author.getPerson());
-        System.out.println(author.getDepartment());
-        System.out.println(author.getPerson().getId());
-        System.out.println(author.getDepartment().getCode());
     }
 }

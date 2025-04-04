@@ -1,4 +1,4 @@
-package sk.tuke.meta.example;
+package sk.tuke.meta.annotations;
 
 public class Main {
     public static void main(String[] args) {

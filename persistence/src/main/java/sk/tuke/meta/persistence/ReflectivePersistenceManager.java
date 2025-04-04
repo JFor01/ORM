@@ -1,5 +1,7 @@
 package sk.tuke.meta.persistence;
 
+import sk.tuke.meta.annotations.Id;
+
 import javax.swing.text.Position;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -22,8 +24,9 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
     @Override
     public void createTables(Class<?>... types)  throws PersistenceException {
-        HashMap<String,List<Pair<String,Class<?>>>> classFields = getClassFields(types);
-        List<String> sqlStrings = getSqlStrings(classFields);
+        LinkedHashMap<String,List<Pair<String,Class<?>>>> classFields = getClassFields(types);
+        List<Optional<Integer>> idPositions = getIdPositions(types);
+        List<String> sqlStrings = getSqlStrings(classFields,idPositions);
         List<PreparedStatement> statements = new ArrayList<>();
         for(String sqlString : sqlStrings){
             System.out.println(sqlString);
@@ -124,7 +127,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
     @Override
     public void save(Object entity) throws PersistenceException {
-
+        System.out.println(entity.getClass().getAnnotation(Id.class));
         try {
             Field field = entity.getClass().getDeclaredField("id");
             field.setAccessible(true);
@@ -162,8 +165,8 @@ public class ReflectivePersistenceManager implements PersistenceManager {
     }
 
 
-    private HashMap<String,List<Pair<String,Class<?>>>> getClassFields(Class<?>... types){
-        HashMap<String,List<Pair<String,Class<?>>>> classFields = new HashMap<String,List<Pair<String,Class<?>>>>();
+    private LinkedHashMap<String,List<Pair<String,Class<?>>>> getClassFields(Class<?>... types){
+        LinkedHashMap<String,List<Pair<String,Class<?>>>> classFields = new LinkedHashMap<String,List<Pair<String,Class<?>>>>();
         for (Class<?> type :types){
             List<Pair<String,Class<?>>> fieldDataTypes = new ArrayList<Pair<String,Class<?>>>();
             Field[] fields = type.getDeclaredFields();
@@ -193,9 +196,11 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
     }
 
-    public List<String> getSqlStrings(HashMap<String, List<Pair<String,Class<?>>>> classFields){
+    public List<String> getSqlStrings(LinkedHashMap<String, List<Pair<String,Class<?>>>> classFields, List<Optional<Integer>> anotationPositions){
         List<String> createTableSqlStrings = new ArrayList<String>();
+        int counter = 0;
         for (String className : classFields.keySet()) {
+            Optional<Integer> annotationPostition = anotationPositions.get(counter);
             List<String> foreignKeys = new ArrayList<>();
             String createTableSqlString = "CREATE TABLE IF NOT EXISTS ";
             List<Pair<String,Class<?>>> fieldTypes = classFields.get(className);
@@ -213,9 +218,8 @@ public class ReflectivePersistenceManager implements PersistenceManager {
                     sqlType = type;
                 }
                 String fieldname = fieldTypes.get(i).getFirst();
-                if(i == 0) {collumString = collumString + "'"+ fieldname + "' " + sqlType + " PRIMARY KEY AUTOINCREMENT,\n";}
-                else if(i==fieldTypes.size()-1){collumString = collumString + "'"+ fieldname + "' " + sqlType ;}
-                else {collumString = collumString +  "'"+ fieldname + "' " + sqlType + ",\n";}
+                if(annotationPostition.isPresent()) collumString = formatId(i,collumString,fieldname,sqlType,fieldTypes,annotationPostition.get());
+                else collumString = formatId(i,collumString,fieldname,sqlType,fieldTypes,0);
             }
             System.out.println(collumString);
             for(String foreignKey : foreignKeys){
@@ -226,6 +230,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
             createTableSqlString = String.format(createTableSqlString,collumString);
             System.out.println(createTableSqlString);
             createTableSqlStrings.add(createTableSqlString);
+            counter ++;
         }
         return createTableSqlStrings;
     }
@@ -483,31 +488,6 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         }
 
 
-        private boolean hasReference(Class<?> cls ){
-
-            Field[] fields = cls.getDeclaredFields();
-            for(Field field : fields){
-                try{
-                    field.getType().getDeclaredField("id");
-                    return true;
-                } catch (NoSuchFieldException e) {
-                }
-            }
-            return false;
-        }
-
-        private Optional<Class<?>> getReference(Class<?> cls){
-
-        Field[] fields = cls.getDeclaredFields();
-        for(Field field : fields){
-            try{
-                field.getType().getDeclaredField("id");
-                return Optional.of(field.getClass());
-            } catch (NoSuchFieldException e) {
-            }
-        }
-        return Optional.empty();
-    }
 
     private List<Integer> getReferencePosition(Class<?> cls){
         List<Integer> positions = new ArrayList<>();
@@ -542,6 +522,38 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         } catch (IllegalAccessException e) {
             throw new PersistenceException(e);
         }
+    }
+
+
+    private List<Optional<Integer>> getIdPositions(Class<?>... types){
+        List<Optional<Integer>> idPositions = new ArrayList<>();
+
+        for(Class<?> type : types){
+            Field[] fields = type.getDeclaredFields();
+            for(int i = 0; i<fields.length;i++ ){
+                if(fields[i].getAnnotation(Id.class)!=null){
+                    idPositions.add(Optional.of(i));
+                    break;
+                }
+                if(i == fields.length-1){
+                    idPositions.add(Optional.empty());
+                }
+            }
+        }
+        System.out.println(idPositions);
+
+
+        return idPositions;
+    }
+
+    private String formatId(int i, String collumString,String fieldname, String sqlType,List<Pair<String,Class<?>>> fieldTypes, int comparedValue ){
+        String newString = null;
+        if(i == comparedValue) {
+            newString = collumString + "'"+ fieldname + "' " + sqlType + " PRIMARY KEY AUTOINCREMENT,\n";
+        }
+        else if(i==fieldTypes.size()-1){newString = collumString + "'"+ fieldname + "' " + sqlType ;}
+        else {newString = collumString +  "'"+ fieldname + "' " + sqlType + ",\n";}
+        return newString;
     }
 
 
