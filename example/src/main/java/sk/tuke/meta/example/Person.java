@@ -1,7 +1,9 @@
 package sk.tuke.meta.example;
 
 import sk.tuke.meta.annotations.Id;
+import sk.tuke.meta.annotations.Table;
 
+@Table(name = "Človek")
 public class Person {
 
     private String surname;

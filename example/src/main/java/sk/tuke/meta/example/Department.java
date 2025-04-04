@@ -1,5 +1,8 @@
 package sk.tuke.meta.example;
 
+import sk.tuke.meta.annotations.Table;
+
+@Table()
 public class Department {
     private long id;
     private String name;

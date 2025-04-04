@@ -1,6 +1,7 @@
 package sk.tuke.meta.persistence;
 
 import sk.tuke.meta.annotations.Id;
+import sk.tuke.meta.annotations.Table;
 
 import javax.swing.text.Position;
 import java.lang.reflect.Array;
@@ -54,7 +55,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
     @Override
     public <T> Optional<T> get(Class<T> type, long id) {
-        String className = type.getSimpleName();
+        String className = getTableName(type);
         String selectQuery = "SELECT * FROM " + "'" + className + "' " + " WHERE ID = (?)";
         Field[] fields = type.getDeclaredFields();
         List<String> types = getTypes(fields);
@@ -83,7 +84,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
     @Override
     public <T> List<T> getAll(Class<T> type) {
-        String className = type.getSimpleName();
+        String className = getTableName(type);
         String selectQuery = "SELECT * FROM " + "'" + className + "' ";
         Field[] fields = type.getDeclaredFields();
         List<String> types = getTypes(fields);
@@ -153,10 +154,15 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
     @Override
     public void delete(Object entity) {
-        String name = entity.getClass().getSimpleName();
+        String name = getTableName( entity.getClass());
         long id;
         try {
-            Field field = entity.getClass().getDeclaredField("id");
+            Field field;
+            Optional<Integer> idPosition = getIdPositions( entity.getClass()).get(0);
+            if(idPosition.isPresent()){
+                field = entity.getClass().getDeclaredFields()[idPosition.get()];
+            }
+            else field = entity.getClass().getDeclaredField("id");
             field.setAccessible(true);
              id = (long)field.get(entity);
         } catch (NoSuchFieldException e) {
@@ -180,7 +186,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         for (Class<?> type :types){
             List<Pair<String,Class<?>>> fieldDataTypes = new ArrayList<Pair<String,Class<?>>>();
             Field[] fields = type.getDeclaredFields();
-            String className = type.getSimpleName();
+            String className = getTableName(type);
             for(Field field : fields){
                 Class<?> fieldType = field.getType();
                 String fieldName = field.getName();
@@ -265,7 +271,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
     }
 
     private void insert(Object entity, int idPosition){
-        String className = entity.getClass().getSimpleName();
+        String className = getTableName(entity.getClass());
         String insertString = "INSERT INTO " + "'" + className+ "'"+ "(%s) VALUES (%s)";
         Optional<ResultSet> generatedKeys;
         List<String> declaredFields = getDeclaredFields(entity);
@@ -300,7 +306,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
     }
 
     private void update(Object entity,long id) throws PersistenceException{
-        String name = entity.getClass().getSimpleName();
+        String name = getTableName(entity.getClass());
         String strId = Long.toString(id);
         List<String> declaredFields = getDeclaredFields(entity);
         List<FieldTypeAndValue> actualFields = getActualFields(entity);
@@ -569,6 +575,17 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         return newString;
     }
 
+
+    private String getTableName(Class<?> entity){
+        String name;
+        if (Objects.equals(entity.getAnnotation(Table.class).name(), "None")){
+            name = entity.getSimpleName();
+
+        }
+        else name = entity.getAnnotation(Table.class).name();
+        return name;
+
+    }
 
 
 

@@ -32,6 +32,10 @@ public class Main {
         manager.save(it);
         manager.save(hrasko);
 
+        List<Person> people = manager.getAll(Person.class);
+        Optional<Person> person = manager.get(Person.class,10);
+        manager.delete(hrasko);
+
 
     }
 }
