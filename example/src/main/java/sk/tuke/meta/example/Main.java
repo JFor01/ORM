@@ -29,8 +29,8 @@ public class Main {
 
         Person hrasko = new Person("Janko", "Hrasko", 30);
         hrasko.setDepartment(it);
-        //manager.save(it);
-        //manager.save(hrasko);
+        manager.save(it);
+        manager.save(hrasko);
 
 
     }

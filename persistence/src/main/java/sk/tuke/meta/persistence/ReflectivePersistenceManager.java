@@ -129,11 +129,21 @@ public class ReflectivePersistenceManager implements PersistenceManager {
     public void save(Object entity) throws PersistenceException {
         System.out.println(entity.getClass().getAnnotation(Id.class));
         try {
-            Field field = entity.getClass().getDeclaredField("id");
+            List<Optional<Integer>> idPosition = getIdPositions(entity.getClass());
+            Field field;
+            Integer idNumber;
+            if(idPosition.get(0).isPresent()){
+                 idNumber = idPosition.get(0).get();
+                 field = entity.getClass().getDeclaredFields()[idNumber];
+            }
+            else {
+                field = entity.getClass().getDeclaredField("id");
+                idNumber = 0;
+            }
             field.setAccessible(true);
             String idString = field.get(entity).toString();
             long id =Long.parseLong(idString);
-            if(id == 0) insert(entity);
+            if(id == 0) insert(entity,idNumber);
             else update(entity,id);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new PersistenceException(e);
@@ -241,7 +251,10 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
     private void updateClassId(Object entity,long id){
         try {
-            Field idField =  entity.getClass().getDeclaredField("id");
+            Field idField;
+            Optional<Integer> idPosition = getIdPositions(entity.getClass()).get(0);
+            if(idPosition.isPresent()) idField = entity.getClass().getDeclaredFields()[idPosition.get()];
+            else idField =  entity.getClass().getDeclaredField("id");
             idField.setAccessible(true);
             idField.set(entity,id);
 
@@ -251,7 +264,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
     }
 
-    private void insert(Object entity){
+    private void insert(Object entity, int idPosition){
         String className = entity.getClass().getSimpleName();
         String insertString = "INSERT INTO " + "'" + className+ "'"+ "(%s) VALUES (%s)";
         Optional<ResultSet> generatedKeys;
@@ -259,8 +272,8 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         List<FieldTypeAndValue> actualFields= getActualFields(entity);
 
         //Getting rid of the unnecessary id
-        declaredFields.remove(0);
-        actualFields.remove(0);
+        declaredFields.remove(idPosition);
+        actualFields.remove(idPosition);
 
         String dataString = formatInsertString(declaredFields);
         String dataString2 = formatInsertStringTokens(declaredFields.size());
