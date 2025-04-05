@@ -9,10 +9,13 @@ public class Person {
 
     private String surname;
     @Id
-    @Column( name = "identification"
+    @Column( name = "identification",
+            unique = true
             )
     private long Id;
-    @Column
+    @Column(
+            nullable = false
+    )
     private String name;
     @Column(
             name = "vek"

@@ -26,7 +26,9 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         LinkedHashMap<String,List<Pair<String,Class<?>>>> classFields = getClassFields(types);
         List<Optional<Integer>> idPositions = getIdPositions(types);
         List<Optional<List<Optional<Integer>>>> columnPositions = getColumnPositions(types);
-        List<String> sqlStrings = getSqlStrings(classFields,idPositions,columnPositions);
+
+
+        List<String> sqlStrings = getSqlStrings(classFields,idPositions,columnPositions,getNullClassPositions(types),getUniqueClassPositions(types));
         List<PreparedStatement> statements = new ArrayList<>();
         for(String sqlString : sqlStrings){
             System.out.println(sqlString);
@@ -55,7 +57,8 @@ public class ReflectivePersistenceManager implements PersistenceManager {
     @Override
     public <T> Optional<T> get(Class<T> type, long id) {
         String className = getTableName(type);
-        String selectQuery = "SELECT * FROM " + "'" + className + "' " + " WHERE ID = (?)";
+        String idName = getIdName(type);
+        String selectQuery = "SELECT * FROM " + "'" + className + "' " + " WHERE " +idName +  " = (?)";
         Field[] fields = type.getDeclaredFields();
         List<String> types = getTypes(fields);
 
@@ -189,7 +192,8 @@ public class ReflectivePersistenceManager implements PersistenceManager {
             String className = getTableName(type);
             for(Field field : fields){
                 Class<?> fieldType = field.getType();
-                String fieldName = field.getName();
+                String fieldName;
+                fieldName = getFieldName(field);
                 Pair<String,Class<?>> nameToType = new Pair<>(fieldName,fieldType);
                 fieldDataTypes.add(nameToType);
                 classFields.put(className,fieldDataTypes);
@@ -212,10 +216,12 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
     }
 
-    public List<String> getSqlStrings(LinkedHashMap<String, List<Pair<String,Class<?>>>> classFields, List<Optional<Integer>> anotationPositions, List<Optional<List<Optional<Integer>>>> columnPositions){
+    public List<String> getSqlStrings(LinkedHashMap<String, List<Pair<String,Class<?>>>> classFields, List<Optional<Integer>> anotationPositions, List<Optional<List<Optional<Integer>>>> columnPositions, List<List<Boolean>> nullPositions, List<List<Boolean>> uniquePositions){
         List<String> createTableSqlStrings = new ArrayList<String>();
         int counter = 0;
         for (String className : classFields.keySet()) {
+            List<Boolean> nulClassPosition = nullPositions.get(counter);
+            List<Boolean> uniqueClassPosition = uniquePositions.get(counter);
             Optional<Integer> annotationPostition = anotationPositions.get(counter);
             Optional<List<Optional<Integer>>> columnPosition = columnPositions.get(counter);
             if(columnPosition.isEmpty()) continue;
@@ -237,8 +243,8 @@ public class ReflectivePersistenceManager implements PersistenceManager {
                     sqlType = type;
                 }
                 String fieldname = fieldTypes.get(i).getFirst();
-                if(annotationPostition.isPresent()) collumString = formatId(i,collumString,fieldname,sqlType,fieldTypes,annotationPostition.get());
-                else collumString = formatId(i,collumString,fieldname,sqlType,fieldTypes,0);
+                if(annotationPostition.isPresent()) collumString = formatId(i,collumString,fieldname,sqlType,fieldTypes,annotationPostition.get(),nulClassPosition.get(i),uniqueClassPosition.get(i));
+                else collumString = formatId(i,collumString,fieldname,sqlType,fieldTypes,0,nulClassPosition.get(i),uniqueClassPosition.get(i));
             }
             int lenghtOfString = collumString.length();
             if(collumString.substring(lenghtOfString - 2,lenghtOfString-1).equals(String.valueOf(','))){
@@ -327,7 +333,9 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         List<Optional<Integer>> columnsPositions = getColumnPositions(entity.getClass()).get(0).get();
         actualFields = removeNonAnnotatedFields(actualFields,columnsPositions);
 
-        String sqlQuerry = "UPDATE " + "'" + name + "'" + " SET %s \nWHERE " + "'" + name + "'"+".id == " + strId;
+        String idName = getIdName(entity.getClass());
+
+        String sqlQuerry = "UPDATE " + "'" + name + "'" + " SET %s \nWHERE " + "'" + name + "'"+"."+ idName + " == " + strId;
         String dataString = formatDataUpdate(declaredFields,columnsPositions);
         sqlQuerry = String.format(sqlQuerry,dataString);
 
@@ -345,7 +353,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         List<String> declaredFieldsList = new ArrayList<>();
         Field[] declaredFields = entity.getClass().getDeclaredFields();
         for(Field field : declaredFields){
-            declaredFieldsList.add(field.getName());
+            declaredFieldsList.add(getFieldName(field));
         }
 
         return declaredFieldsList;
@@ -602,13 +610,19 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         return idPositions;
     }
 
-    private String formatId(int i, String collumString,String fieldname, String sqlType,List<Pair<String,Class<?>>> fieldTypes, int comparedValue ){
+    private String formatId(int i, String collumString,String fieldname, String sqlType,List<Pair<String,Class<?>>> fieldTypes, int comparedValue, Boolean nullable, Boolean unique ){
         String newString = null;
+        String nul;
+        if(nullable)nul = "";
+        else nul = "NOT NULL ";
+        String uniq;
+        if(unique)uniq = "UNIQUE";
+        else uniq = "";
         if(i == comparedValue) {
-            newString = collumString + "'"+ fieldname + "' " + sqlType + " PRIMARY KEY AUTOINCREMENT,\n";
+            newString = collumString + "'"+ fieldname + "' " + sqlType + " PRIMARY KEY AUTOINCREMENT " + nul + " " + uniq  + ",\n";
         }
-        else if(i==fieldTypes.size()-1){newString = collumString + "'"+ fieldname + "' " + sqlType ;}
-        else {newString = collumString +  "'"+ fieldname + "' " + sqlType + ",\n";}
+        else if(i==fieldTypes.size()-1){newString = collumString + "'"+ fieldname + "' " + sqlType + nul + " " + uniq ;}
+        else {newString = collumString +  "'"+ fieldname + "' " + sqlType + nul + " " +  uniq + ",\n";}
         return newString;
     }
 
@@ -670,6 +684,65 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
     }
 
+
+    private String getFieldName(Field field){
+        String fieldName;
+        if(field.getAnnotation(Column.class)==null) fieldName = field.getName();
+        else if(Objects.equals(field.getAnnotation(Column.class).name(), "None"))fieldName = field.getName();
+        else fieldName = field.getAnnotation(Column.class).name();
+        return fieldName;
+    }
+
+    private String getIdName(Class<?> entity){
+        String idName;
+        int idPostition = getIdPositions(entity).get(0).get();
+        idName = getFieldName(entity.getDeclaredFields()[idPostition]);
+
+
+        return idName;
+    }
+
+    List<Boolean> getNullPositions(Class<?> entity){
+        List<Boolean> nullPositions = new ArrayList<>();
+        Field fields[] = entity.getDeclaredFields();
+        for (Field field : fields){
+            if(field.getAnnotation(Column.class)!=null){
+                nullPositions.add(field.getAnnotation(Column.class).nullable());
+            }
+            else nullPositions.add(true);
+        }
+        return nullPositions;
+    }
+
+    List<List<Boolean>> getNullClassPositions(Class<?> ... types){
+        List<List<Boolean>> nullClassPositions = new ArrayList<>();
+        for(Class<?> type : types){
+            nullClassPositions.add(getNullPositions(type));
+        }
+
+        return nullClassPositions;
+    }
+
+    List<Boolean> getUniquePositions(Class<?> entity){
+        List<Boolean> uniquePositions = new ArrayList<>();
+        Field fields[] = entity.getDeclaredFields();
+        for (Field field : fields){
+            if(field.getAnnotation(Column.class)!=null){
+                uniquePositions.add(field.getAnnotation(Column.class).unique());
+            }
+            else uniquePositions.add(true);
+        }
+        return uniquePositions;
+    }
+
+    List<List<Boolean>> getUniqueClassPositions(Class<?> ... types){
+        List<List<Boolean>> uniqueClassPositions = new ArrayList<>();
+        for(Class<?> type : types){
+            uniqueClassPositions.add(getUniquePositions(type));
+        }
+
+        return uniqueClassPositions;
+    }
 
 
 

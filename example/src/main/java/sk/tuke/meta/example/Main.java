@@ -34,8 +34,8 @@ public class Main {
         hrasko.setName("Juraj");
         manager.save(hrasko);
 
-         List<Person> people = manager.getAll(Person.class);
-     //   Optional<Person> person = manager.get(Person.class,10);
+        List<Person> people = manager.getAll(Person.class);
+       // Optional<Person> person = manager.get(Person.class,10);
 
 
     }
