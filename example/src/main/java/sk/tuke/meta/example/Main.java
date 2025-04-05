@@ -31,10 +31,11 @@ public class Main {
         hrasko.setDepartment(it);
         manager.save(it);
         manager.save(hrasko);
+        hrasko.setName("Juraj");
+        manager.save(hrasko);
 
-        List<Person> people = manager.getAll(Person.class);
-        Optional<Person> person = manager.get(Person.class,10);
-        manager.delete(hrasko);
+    //    List<Person> people = manager.getAll(Person.class);
+      //  Optional<Person> person = manager.get(Person.class,10);
 
 
     }

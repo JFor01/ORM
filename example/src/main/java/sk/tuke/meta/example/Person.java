@@ -1,5 +1,6 @@
 package sk.tuke.meta.example;
 
+import sk.tuke.meta.annotations.Column;
 import sk.tuke.meta.annotations.Id;
 import sk.tuke.meta.annotations.Table;
 
@@ -8,9 +9,13 @@ public class Person {
 
     private String surname;
     @Id
+    @Column
     private long Id;
+    @Column
     private String name;
+    @Column
     private int age;
+
 
     private Department department;
 

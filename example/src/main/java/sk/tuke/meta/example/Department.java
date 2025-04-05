@@ -1,11 +1,14 @@
 package sk.tuke.meta.example;
 
+import sk.tuke.meta.annotations.Column;
 import sk.tuke.meta.annotations.Table;
 
 @Table()
 public class Department {
+    @Column
     private long id;
     private String name;
+    @Column
     private String code;
 
     public Department() {

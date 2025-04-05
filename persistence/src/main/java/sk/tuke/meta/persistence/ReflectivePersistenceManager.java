@@ -1,8 +1,10 @@
 package sk.tuke.meta.persistence;
 
+import sk.tuke.meta.annotations.Column;
 import sk.tuke.meta.annotations.Id;
 import sk.tuke.meta.annotations.Table;
 
+import javax.swing.text.AttributeSet;
 import javax.swing.text.Position;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -27,7 +29,8 @@ public class ReflectivePersistenceManager implements PersistenceManager {
     public void createTables(Class<?>... types)  throws PersistenceException {
         LinkedHashMap<String,List<Pair<String,Class<?>>>> classFields = getClassFields(types);
         List<Optional<Integer>> idPositions = getIdPositions(types);
-        List<String> sqlStrings = getSqlStrings(classFields,idPositions);
+        List<Optional<List<Optional<Integer>>>> columnPositions = getColumnPositions(types);
+        List<String> sqlStrings = getSqlStrings(classFields,idPositions,columnPositions);
         List<PreparedStatement> statements = new ArrayList<>();
         for(String sqlString : sqlStrings){
             System.out.println(sqlString);
@@ -212,11 +215,13 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
     }
 
-    public List<String> getSqlStrings(LinkedHashMap<String, List<Pair<String,Class<?>>>> classFields, List<Optional<Integer>> anotationPositions){
+    public List<String> getSqlStrings(LinkedHashMap<String, List<Pair<String,Class<?>>>> classFields, List<Optional<Integer>> anotationPositions, List<Optional<List<Optional<Integer>>>> columnPositions){
         List<String> createTableSqlStrings = new ArrayList<String>();
         int counter = 0;
         for (String className : classFields.keySet()) {
             Optional<Integer> annotationPostition = anotationPositions.get(counter);
+            Optional<List<Optional<Integer>>> columnPosition = columnPositions.get(counter);
+            if(columnPosition.isEmpty()) continue;
             List<String> foreignKeys = new ArrayList<>();
             String createTableSqlString = "CREATE TABLE IF NOT EXISTS ";
             List<Pair<String,Class<?>>> fieldTypes = classFields.get(className);
@@ -225,6 +230,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
             String collumString = "";
 
             for (int i = 0; i < fieldTypes.size(); i++) {
+                if(columnPosition.get().get(i).isEmpty()) continue;
                 String sqlType = convertJavaTypesToSql(fieldTypes.get(i).getSecond());
                 if (sqlType.startsWith("FOREIGN:")) {
                     sqlType = sqlType.substring(8);
@@ -236,6 +242,11 @@ public class ReflectivePersistenceManager implements PersistenceManager {
                 String fieldname = fieldTypes.get(i).getFirst();
                 if(annotationPostition.isPresent()) collumString = formatId(i,collumString,fieldname,sqlType,fieldTypes,annotationPostition.get());
                 else collumString = formatId(i,collumString,fieldname,sqlType,fieldTypes,0);
+            }
+            int lenghtOfString = collumString.length();
+            if(collumString.substring(lenghtOfString - 2,lenghtOfString-1).equals(String.valueOf(','))){
+                collumString = collumString.substring(0,lenghtOfString-2);
+
             }
             System.out.println(collumString);
             for(String foreignKey : foreignKeys){
@@ -281,8 +292,14 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         declaredFields.remove(idPosition);
         actualFields.remove(idPosition);
 
-        String dataString = formatInsertString(declaredFields);
-        String dataString2 = formatInsertStringTokens(declaredFields.size());
+        List<Optional<Integer>> columnsPositions = getColumnPositions(entity.getClass()).get(0).get();
+
+        columnsPositions.remove(idPosition);
+
+        actualFields = removeNonAnnotatedFields(actualFields,columnsPositions);
+
+        String dataString = formatInsertString(declaredFields,columnsPositions);
+        String dataString2 = formatInsertStringTokens(declaredFields.size(),columnsPositions);
         insertString = String.format(insertString,dataString,dataString2);
         System.out.println(dataString);
         System.out.println(dataString2);
@@ -310,9 +327,11 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         String strId = Long.toString(id);
         List<String> declaredFields = getDeclaredFields(entity);
         List<FieldTypeAndValue> actualFields = getActualFields(entity);
+        List<Optional<Integer>> columnsPositions = getColumnPositions(entity.getClass()).get(0).get();
+        actualFields = removeNonAnnotatedFields(actualFields,columnsPositions);
 
         String sqlQuerry = "UPDATE " + "'" + name + "'" + " SET %s \nWHERE " + "'" + name + "'"+".id == " + strId;
-        String dataString = formatDataUpdate(declaredFields);
+        String dataString = formatDataUpdate(declaredFields,columnsPositions);
         sqlQuerry = String.format(sqlQuerry,dataString);
 
         System.out.println("Printing sql queryy");
@@ -375,29 +394,44 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         return actualFieldsList;
     }
 
-    private String formatDataUpdate(List<String> declaredFields){
+    private String formatDataUpdate(List<String> declaredFields, List<Optional<Integer>> annotationPositions){
         String dataString = "";
         for (int i = 0;i<declaredFields.size();i++){
+            if(annotationPositions.get(i).isEmpty()) continue;
             if (i != declaredFields.size()-1) dataString = dataString+declaredFields.get(i) + " =?,";
             else dataString = dataString+declaredFields.get(i) + " =?";
         }
+        int stringLenght = dataString.length();
+        if(dataString.substring(stringLenght-1).equals(String.valueOf(','))){
+            dataString = dataString.substring(0,stringLenght-1);
+        }
 
         return dataString;
     }
-    private String formatInsertString(List<String> declaredFields){
+    private String formatInsertString(List<String> declaredFields, List<Optional<Integer>> columnPositions){
         String dataString = "";
         for (int i = 0;i<declaredFields.size();i++){
+            if(columnPositions.get(i).isEmpty()) continue;
             if (i != declaredFields.size()-1) dataString = dataString+declaredFields.get(i) + ",";
             else dataString = dataString+declaredFields.get(i) ;
+        }
+        int stringLenght = dataString.length();
+        if(dataString.substring(stringLenght-1).equals(String.valueOf(','))){
+            dataString = dataString.substring(0,stringLenght-1);
         }
         return dataString;
     }
 
-    private String formatInsertStringTokens(int size){
+    private String formatInsertStringTokens(int size, List<Optional<Integer>> columnPositions){
         String dataString = "";
         for (int i = 0;i<size;i++){
+            if(columnPositions.get(i).isEmpty()) continue;
             if (i != size-1) dataString = dataString+ "?,";
             else dataString = dataString+ "?";
+        }
+        int stringLenght = dataString.length();
+        if(dataString.substring(stringLenght-1).equals(String.valueOf(','))){
+            dataString = dataString.substring(0,stringLenght-1);
         }
         return dataString;
     }
@@ -584,6 +618,52 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         }
         else name = entity.getAnnotation(Table.class).name();
         return name;
+
+    }
+
+
+    private List<Optional<List<Optional<Integer>>>> getColumnPositions(Class<?>... types){
+        List<Optional<List<Optional<Integer>>>> columnPositions= new ArrayList<>();
+
+        for(Class<?> type : types){
+            Field[] fields = type.getDeclaredFields();
+            List<Optional<Integer>> positions = new ArrayList<>();
+            for(int i = 0; i<fields.length;i++ ) {
+                if (fields[i].getAnnotation(Column.class) != null) {
+                    positions.add(Optional.of(i));
+                } else {
+                    positions.add(Optional.empty());
+                }
+            }
+            if(allEmpty(positions)) {
+                columnPositions.add(Optional.empty());
+            }
+            else columnPositions.add(Optional.of(positions));
+            }
+        System.out.println(columnPositions);
+
+
+        return columnPositions;
+    }
+
+    private boolean allEmpty(List<Optional<Integer>> positions){
+        for (Optional<Integer> position : positions){
+            if (position.isPresent()) return false;
+        }
+        return true;
+    }
+
+
+    private List<FieldTypeAndValue> removeNonAnnotatedFields(List<FieldTypeAndValue> actualFields,List<Optional<Integer>> annotationPositions ){
+        List<FieldTypeAndValue> newFields = new ArrayList<>();
+        for(int i = 0;i < actualFields.size(); i++ ){
+            if(annotationPositions.get(i).isPresent()){
+                newFields.add(actualFields.get(i));
+            }
+
+
+        }
+        return newFields;
 
     }
 
