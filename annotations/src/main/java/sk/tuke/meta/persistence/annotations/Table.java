@@ -1,4 +1,4 @@
-package sk.tuke.meta.annotations;
+package sk.tuke.meta.persistence.annotations;
 
 
 import java.lang.annotation.ElementType;
@@ -6,11 +6,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface Column {
+public @interface Table {
     String name() default "None";
-    boolean nullable() default true;
-    boolean unique() default false;
-
 }

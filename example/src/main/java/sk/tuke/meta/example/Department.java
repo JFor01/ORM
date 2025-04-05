@@ -1,7 +1,7 @@
 package sk.tuke.meta.example;
 
-import sk.tuke.meta.annotations.Column;
-import sk.tuke.meta.annotations.Table;
+import sk.tuke.meta.persistence.annotations.Column;
+import sk.tuke.meta.persistence.annotations.Table;
 
 @Table()
 public class Department {

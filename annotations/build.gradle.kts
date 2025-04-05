@@ -2,7 +2,7 @@ plugins {
     id("java")
 }
 
-group = "sk.tuke.meta.persistance"
+group = "sk.tuke.meta.persistence"
 version = "1.0-SNAPSHOT"
 
 repositories {

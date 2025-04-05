@@ -1,15 +1,11 @@
 package sk.tuke.meta.persistence;
 
-import sk.tuke.meta.annotations.Column;
-import sk.tuke.meta.annotations.Id;
-import sk.tuke.meta.annotations.Table;
+import sk.tuke.meta.persistence.annotations.Column;
+import sk.tuke.meta.persistence.annotations.Id;
+import sk.tuke.meta.persistence.annotations.Table;
 
-import javax.swing.text.AttributeSet;
-import javax.swing.text.Position;
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.security.KeyPair;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
