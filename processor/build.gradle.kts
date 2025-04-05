@@ -1,0 +1,26 @@
+plugins {
+    id("java")
+}
+
+group = "sk.tuke.meta.persistence"
+version = "1.0-SNAPSHOT"
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+dependencies {
+    testImplementation(platform("org.junit:junit-bom:5.9.1"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    implementation(project(":annotations"))
+    implementation(project(":persistence"))
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
