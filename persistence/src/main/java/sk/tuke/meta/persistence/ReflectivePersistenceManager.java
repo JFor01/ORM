@@ -68,7 +68,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         }
 
         ResultSet resultSet = executeGetQuery(selectQuery,id);
-
+        List<Optional<Integer>> annotationPositions = getColumnPositions(type).get(0).get();
         T classInstance;
         try {
             classInstance = type.getDeclaredConstructor().newInstance();
@@ -82,7 +82,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         }
 
 
-        return insertFieldsIntoInstance(resultSet,types,classInstance);
+        return insertFieldsIntoInstance(resultSet,types,classInstance,annotationPositions);
     }
 
     @Override
@@ -91,6 +91,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         String selectQuery = "SELECT * FROM " + "'" + className + "' ";
         Field[] fields = type.getDeclaredFields();
         List<String> types = getTypes(fields);
+        List<Optional<Integer>> annotationPositions = getColumnPositions(type).get(0).get();
 
         for(String fieldType :types){
             System.out.println(fieldType);
@@ -112,7 +113,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
             }
             try {
                 T classInstance = type.getDeclaredConstructor().newInstance();
-                Optional<T> optClassInstance = insertFieldsIntoInstance(resultSet,types,classInstance);
+                Optional<T> optClassInstance = insertFieldsIntoInstance(resultSet,types,classInstance,annotationPositions);
                 classInstances.add(optClassInstance.get());
             } catch (InstantiationException | InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
                 throw new PersistenceException(e);
@@ -492,7 +493,7 @@ public class ReflectivePersistenceManager implements PersistenceManager {
         return resultSet;
     }
 
-    private <T> Optional<T> insertFieldsIntoInstance(ResultSet resultSet, List<String> types,T classInstance ){
+    private <T> Optional<T> insertFieldsIntoInstance(ResultSet resultSet, List<String> types,T classInstance,List<Optional<Integer>> annotationPositions){
 
         Class<?> clasReflexion = classInstance.getClass();
         List<Integer> positions;
@@ -500,7 +501,13 @@ public class ReflectivePersistenceManager implements PersistenceManager {
 
             try{
                 int index = 1;
+                int indexOffset = 0;
                 for (String type : types) {
+                    if(annotationPositions.get(index-1).isEmpty()) {
+                        index++;
+                        indexOffset += 1;
+                        continue;
+                    }
                     if(checkIndexAgainstPositions(positions,index-1)){
                         insertNewReferenceIntoInstance(classInstance,index-1,resultSet.getInt(index));
                         index++;
@@ -508,16 +515,16 @@ public class ReflectivePersistenceManager implements PersistenceManager {
                     }
 
                     switch (type) {
-                        case "long": insertValueIntoInstance(resultSet.getLong(index),classInstance,index-1);
+                        case "long": insertValueIntoInstance(resultSet.getLong(index-indexOffset),classInstance,index-1);
                         break;
-                        case "String" : insertValueIntoInstance(resultSet.getString(index),classInstance,index-1);
+                        case "String" : insertValueIntoInstance(resultSet.getString(index-indexOffset),classInstance,index-1);
 
                         break;
-                        case "int" : insertValueIntoInstance(resultSet.getInt(index),classInstance,index-1);
+                        case "int" : insertValueIntoInstance(resultSet.getInt(index-indexOffset),classInstance,index-1);
                         break;
-                        case "float" : insertValueIntoInstance(resultSet.getFloat(index),classInstance,index-1);
+                        case "float" : insertValueIntoInstance(resultSet.getFloat(index-indexOffset),classInstance,index-1);
                         break;
-                        case "double" : insertValueIntoInstance(resultSet.getDouble(index),classInstance,index-1);
+                        case "double" : insertValueIntoInstance(resultSet.getDouble(index-indexOffset),classInstance,index-1);
                         default: throw new PersistenceException("Type not supported");
                     }
                     index++;
