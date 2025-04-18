@@ -1,8 +1,10 @@
 package sk.tuke.meta.example;
 
+import sk.tuke.meta.persistence.GeneratedPersistenceManager;
 import sk.tuke.meta.persistence.PersistenceManager;
 import sk.tuke.meta.persistence.ReflectivePersistenceManager;
 
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.List;
@@ -13,12 +15,18 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
+        URL url = ClassLoader.getSystemResource("build/generated/sources/annotationProcessor/java/main/resource.txt");
+        if (url != null){
+            url.getContent();
+        }
 
-        PersistenceManager manager = new ReflectivePersistenceManager(conn);
+        PersistenceManager manager = new GeneratedPersistenceManager(conn);
 
         manager.createTables(Person.class, Department.class, Author.class);
 
-        exampleOperations(manager);
+        //exampleOperations(manager);
+
+
 
         conn.close();
     }

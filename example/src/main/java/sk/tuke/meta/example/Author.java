@@ -1,13 +1,22 @@
 package sk.tuke.meta.example;
 
+import sk.tuke.meta.persistence.annotations.Column;
 import sk.tuke.meta.persistence.annotations.Table;
 
 @Table
 public class Author {
+
+    @Column
     private long id;
+
+
+    @Column
     private String name;
 
+    @Column(name = "človek")
     private Person person;
+    @Column
+
     private Department department;
 
     public Author(){

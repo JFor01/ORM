@@ -19,6 +19,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     implementation(project(":annotations"))
     implementation(project(":persistence"))
+    implementation("org.apache.velocity:velocity-engine-core:2.3")
+
 }
 
 tasks.test {

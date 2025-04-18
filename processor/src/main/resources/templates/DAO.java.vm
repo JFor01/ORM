@@ -1,0 +1,81 @@
+package $entity.PackageName;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Optional;
+
+import sk.tuke.meta.persistence.DAOPersistenceManager;
+import sk.tuke.meta.persistence.EntityDAO;
+import sk.tuke.meta.persistence.PersistenceException;
+
+public class $entity.DaoName implements EntityDAO<$entity.Name> {
+private Connection connection;
+private DAOPersistenceManager daoPersistenceManager;
+
+public ${entity.DaoName}(DAOPersistenceManager daoPersistenceManager) {
+        this.connection = daoPersistenceManager.getConnection();
+        this.daoPersistenceManager = daoPersistenceManager;
+        }
+@Override
+public void createTable() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("CREATE TABLE IF NOT EXISTS \"${entity.TableName}\" (\n");
+
+    #foreach( $col in $entity.Columns )
+
+
+
+
+            sb.append("    $col.columnName $col.columnType");
+        #if( !$col.nullable )          #* or test whatever flag you track *#
+                sb.append(" NOT NULL");
+        #end
+        #if($foreach.hasNext)
+                sb.append(",\n");
+        #end
+    #end
+
+        sb.append("\n);");
+        String statement = sb.toString();
+
+        try (var create = connection.prepareStatement(statement)) {
+        create.execute();
+        } catch (SQLException e) {
+        throw new PersistenceException(
+        "Could not create table: ${entity.TableName}", e);
+        }
+        }
+
+
+
+
+
+
+@Override
+public Optional<$entity.Name> get(long id) {
+        return Optional.empty();
+        }
+
+@Override
+public List<$entity.Name> getAll() {
+        return List.of();
+        }
+
+@Override
+public void save(Object entity) {
+        }
+
+@Override
+public void delete(Object obj) {
+    $entity.Name entity = ($entity.Name) obj;
+        try {
+        var statement = connection.prepareStatement(
+        "delete from \"${entity.TableName}\" where ${entity.IdColumn.ColumnName}=?");
+        statement.setLong(1, entity.${entity.IdColumn.GetterName}());
+        statement.execute();
+        } catch (SQLException e) {
+        throw new PersistenceException("Cannot delete $entity.Name");
+        }
+        }
+        }
