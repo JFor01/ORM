@@ -28,8 +28,11 @@ public void createTable() {
 
 
             sb.append("    $col.columnName $col.columnType");
-        #if( !$col.nullable )          #* or test whatever flag you track *#
+        #if( !$col.Nullable )          #* or test whatever flag you track *#
                 sb.append(" NOT NULL");
+        #end
+        #if( $col.Unique )
+            sb.append(" UNIQUE");
         #end
         #if($foreach.hasNext)
                 sb.append(",\n");

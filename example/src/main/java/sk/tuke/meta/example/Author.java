@@ -13,7 +13,7 @@ public class Author {
     @Column
     private String name;
 
-    @Column(name = "človek")
+    @Column(name = "človek",nullable = false,unique = true)
     private Person person;
     @Column
 
