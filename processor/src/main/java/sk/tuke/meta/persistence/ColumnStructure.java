@@ -6,6 +6,7 @@ public class ColumnStructure {
     private final String fieldName;
     private final String columnName;
     private       String columnType;
+    private       String javaType;
 
     private       boolean nullable;
     private final boolean unique;
@@ -16,6 +17,7 @@ public class ColumnStructure {
     private final boolean foreignKey;
     private final String  referencedTable;
     private final String  referencedColumn;
+    private final String referencedClass;
 
     public ColumnStructure(String fieldName,
                            String columnName,
@@ -26,7 +28,9 @@ public class ColumnStructure {
                            boolean autoIncrement,
                            boolean foreignKey,
                            String  referencedTable,
-                           String  referencedColumn) {
+                           String  referencedColumn,
+                           String referencedClass,
+                           String javaType) {
 
         this.fieldName        = fieldName;
         this.columnName       = columnName;
@@ -38,6 +42,8 @@ public class ColumnStructure {
         this.foreignKey       = foreignKey;
         this.referencedTable  = referencedTable;
         this.referencedColumn = referencedColumn;
+        this.referencedClass = referencedClass;
+        this.javaType = javaType;
     }
 
 
@@ -67,4 +73,9 @@ public class ColumnStructure {
                 + fieldName.substring(1);
     }
 
+    public String getReferencedClass() { return referencedClass; }
+
+    public String getJavaType(){
+        return javaType;
+    }
 }

@@ -41,9 +41,11 @@ public class Main {
         manager.save(hrasko);
         hrasko.setName("Juraj");
         manager.save(hrasko);
+        Author autor = new Author("Juraj",hrasko,it);
+        manager.save(autor);
 
        // List<Person> people = manager.getAll(Person.class);
-       // Optional<Person> person = manager.get(Person.class,10);
+        Optional<Author> author = manager.get(Author.class,3);
 
 
     }

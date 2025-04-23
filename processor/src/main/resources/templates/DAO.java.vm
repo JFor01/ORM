@@ -67,8 +67,73 @@ public void createTable() {
 
 @Override
 public Optional<$entity.Name> get(long id) {
+
+#set( $pk = "" )
+#foreach( $c in $entity.Columns )
+    #if( $c.primaryKey ) #set( $pk = $c ) #end
+#end
+#if( $pk == "" )
+        throw new PersistenceException("Entity ${entity.Name} has no primary key.");
+#end
+
+        StringBuilder sql = new StringBuilder("SELECT ");
+#foreach( $c in $entity.Columns )
+    #if( $foreach.index > 0 ) sql.append(", "); #end
+        sql.append("$c.columnName");
+#end
+        sql.append(" FROM \"${entity.TableName}\" WHERE $pk.columnName = ?;");
+
+        try (var stmt = connection.prepareStatement(sql.toString())) {
+        stmt.setLong(1, id);
+
+        try (var rs = stmt.executeQuery()) {
+        if (!rs.next()) {
         return Optional.empty();
         }
+
+${entity.Name} obj = new ${entity.Name}();
+
+
+#foreach( $c in $entity.Columns )
+    #if( $c.foreignKey )
+            long fk_${c.fieldName} = rs.getLong("$c.columnName");
+    #else
+        #if( $c.javaType == "boolean" || $c.javaType == "java.lang.Boolean" )
+                obj.${c.setterName}(rs.getBoolean("$c.columnName"));
+        #elseif( $c.javaType == "int" || $c.javaType == "java.lang.Integer" )
+                obj.${c.setterName}(rs.getInt("$c.columnName"));
+        #elseif( $c.javaType == "long" || $c.javaType == "java.lang.Long" )
+                obj.${c.setterName}(rs.getLong("$c.columnName"));
+        #else
+                obj.${c.setterName}(rs.getString("$c.columnName"));
+        #end
+    #end
+#end
+
+
+#foreach( $c in $entity.Columns )
+    #if( $c.foreignKey )
+    @SuppressWarnings("unchecked")
+            var dao_${c.fieldName} =
+                    (EntityDAO<${c.referencedClass}>)
+            daoPersistenceManager.getDAO(${c.referencedClass}.class);
+
+        ${c.referencedClass} ref_${c.fieldName} =
+            dao_${c.fieldName}.get(fk_${c.fieldName}).orElse(null);
+
+            obj.${c.setterName}(ref_${c.fieldName});
+    #end
+#end
+        return Optional.of(obj);
+        }
+        } catch (SQLException e) {
+        throw new PersistenceException(
+        "Cannot retrieve ${entity.Name} with id " + id, e);
+        }
+        }
+
+
+
 
 @Override
 public List<$entity.Name> getAll() {
@@ -77,14 +142,11 @@ public List<$entity.Name> getAll() {
 
 @Override
 public void save(Object obj) {
-    $entity.Name entity = ($entity.Name) obj;
-
+    ${entity.Name} entity = (${entity.Name}) obj;
 
     #set( $pk = "" )
     #foreach( $c in $entity.Columns )
-        #if( $c.primaryKey )
-            #set( $pk = $c )
-        #end
+        #if( $c.primaryKey ) #set( $pk = $c ) #end
     #end
     #if( $pk == "" )
             throw new PersistenceException("Entity ${entity.Name} has no primary key.");
@@ -104,10 +166,7 @@ public void save(Object obj) {
 
     #foreach( $c in $entity.Columns )
         #if( !$c.primaryKey || !$c.autoIncrement )
-                if (cols.length() > 0) {
-                cols.append(", ");
-                vals.append(", ");
-                }
+                if (cols.length() > 0) { cols.append(", "); vals.append(", "); }
                 cols.append("$c.columnName");
                 vals.append("?");
         #end
@@ -125,10 +184,19 @@ public void save(Object obj) {
     #set( $idx = 1 )
     #foreach( $c in $entity.Columns )
         #if( !$c.primaryKey || !$c.autoIncrement )
-                stmt.setObject($idx, entity.${c.getterName}());
+            #if( $c.foreignKey )
+                    if (entity.${c.getterName}() == null) {
+                    stmt.setObject($idx, null);
+                    } else {
+                    stmt.setObject($idx, entity.${c.getterName}().getId());
+                    }
+            #else
+                    stmt.setObject($idx, entity.${c.getterName}());
+            #end
             #set( $idx = $idx + 1 )
         #end
     #end
+
         stmt.executeUpdate();
 
     #if( $pk.autoIncrement )
@@ -158,7 +226,15 @@ public void save(Object obj) {
     #set( $idx = 1 )
     #foreach( $c in $entity.Columns )
         #if( !$c.primaryKey )
-                stmt.setObject($idx, entity.${c.getterName}());
+            #if( $c.foreignKey )
+                    if (entity.${c.getterName}() == null) {
+                    stmt.setObject($idx, null);
+                    } else {
+                    stmt.setObject($idx, entity.${c.getterName}().getId());
+                    }
+            #else
+                    stmt.setObject($idx, entity.${c.getterName}());
+            #end
             #set( $idx = $idx + 1 )
         #end
     #end
@@ -170,6 +246,7 @@ public void save(Object obj) {
         throw new PersistenceException("Cannot save ${entity.Name}", e);
         }
         }
+
 
 
 
