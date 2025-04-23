@@ -44,7 +44,7 @@ public class Main {
         Author autor = new Author("Juraj",hrasko,it);
         manager.save(autor);
 
-       // List<Person> people = manager.getAll(Person.class);
+        List<Person> people = manager.getAll(Person.class);
         Optional<Author> author = manager.get(Author.class,3);
 
 

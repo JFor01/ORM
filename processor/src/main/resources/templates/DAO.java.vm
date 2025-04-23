@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
+import java.util.ArrayList;
 
 import sk.tuke.meta.persistence.DAOPersistenceManager;
 import sk.tuke.meta.persistence.EntityDAO;
@@ -136,9 +137,36 @@ ${entity.Name} obj = new ${entity.Name}();
 
 
 @Override
-public List<$entity.Name> getAll() {
-        return List.of();
+public List<${entity.Name}> getAll() {
+
+    #set( $pk = "" )
+    #foreach( $c in $entity.Columns )
+        #if( $c.primaryKey ) #set( $pk = $c ) #end
+    #end
+    #if( $pk == "" )
+            throw new PersistenceException("Entity ${entity.Name} has no primary key.");
+    #end
+
+        List<${entity.Name}> list = new ArrayList<>();
+
+        String sql = "SELECT " + "$pk.columnName" +
+        " FROM \"${entity.TableName}\";";
+
+        try (var stmt = connection.prepareStatement(sql);
+        var rs   = stmt.executeQuery()) {
+
+        while (rs.next()) {
+        long id = rs.getLong(1);
+        this.get(id).ifPresent(list::add);
         }
+
+        } catch (SQLException e) {
+        throw new PersistenceException(
+        "Cannot fetch all ${entity.Name} records", e);
+        }
+        return list;
+        }
+
 
 @Override
 public void save(Object obj) {
