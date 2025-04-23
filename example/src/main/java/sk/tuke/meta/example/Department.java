@@ -42,4 +42,7 @@ public class Department {
     public String toString() {
         return String.format("Department %d: %s (%s)", id, name, code);
     }
+    public void setId(long id){
+        this.id = id;
+    }
 }

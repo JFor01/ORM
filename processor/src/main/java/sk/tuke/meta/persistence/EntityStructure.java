@@ -36,7 +36,7 @@ public class EntityStructure {
 
 
     public ColumnStructure getIdColumn() {
-        return new ColumnStructure("id", "id", "INTEGER",true,true);
+        return new ColumnStructure("id", "id", "INTEGER",true,true,true,true,false,"","");
     }
 
     public String getFullName() {

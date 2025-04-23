@@ -24,7 +24,7 @@ public class Main {
 
         manager.createTables(Person.class, Department.class, Author.class);
 
-        //exampleOperations(manager);
+        exampleOperations(manager);
 
 
 
@@ -42,7 +42,7 @@ public class Main {
         hrasko.setName("Juraj");
         manager.save(hrasko);
 
-        List<Person> people = manager.getAll(Person.class);
+       // List<Person> people = manager.getAll(Person.class);
        // Optional<Person> person = manager.get(Person.class,10);
 
 

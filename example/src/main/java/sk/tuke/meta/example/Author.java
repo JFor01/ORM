@@ -48,4 +48,7 @@ public class Author {
 
     public Department getDepartment(){return department;}
     void setDepartment(Department department){this.department = department;}
+    public void setId(long id){
+        this.id = id;
+    }
 }

@@ -28,16 +28,26 @@ public void createTable() {
 
 
             sb.append("    $col.columnName $col.columnType");
-        #if( !$col.Nullable )          #* or test whatever flag you track *#
+        #if( !$col.Nullable )
                 sb.append(" NOT NULL");
         #end
         #if( $col.Unique )
             sb.append(" UNIQUE");
         #end
+        #if( $col.primaryKey )
+                sb.append(" PRIMARY KEY AUTOINCREMENT");
+        #end
+
         #if($foreach.hasNext)
                 sb.append(",\n");
         #end
     #end
+    #foreach( $c in $entity.Columns )
+        #if( $c.foreignKey )
+                sb.append(",\n    FOREIGN KEY($c.columnName) REFERENCES ${c.referencedTable}($c.referencedColumn)");
+        #end
+    #end
+
 
         sb.append("\n);");
         String statement = sb.toString();
@@ -66,8 +76,102 @@ public List<$entity.Name> getAll() {
         }
 
 @Override
-public void save(Object entity) {
+public void save(Object obj) {
+    $entity.Name entity = ($entity.Name) obj;
+
+
+    #set( $pk = "" )
+    #foreach( $c in $entity.Columns )
+        #if( $c.primaryKey )
+            #set( $pk = $c )
+        #end
+    #end
+    #if( $pk == "" )
+            throw new PersistenceException("Entity ${entity.Name} has no primary key.");
+    #end
+
+        boolean isInsert =
+    #if( $pk.columnType == "INTEGER" )
+            entity.${pk.getterName}() == 0;
+    #else
+            entity.${pk.getterName}() == null;
+    #end
+
+        try {
+        if (isInsert) {
+        StringBuilder cols = new StringBuilder();
+        StringBuilder vals = new StringBuilder();
+
+    #foreach( $c in $entity.Columns )
+        #if( !$c.primaryKey || !$c.autoIncrement )
+                if (cols.length() > 0) {
+                cols.append(", ");
+                vals.append(", ");
+                }
+                cols.append("$c.columnName");
+                vals.append("?");
+        #end
+    #end
+
+        StringBuilder sql = new StringBuilder()
+        .append("INSERT INTO \"${entity.TableName}\" (")
+        .append(cols).append(") VALUES (")
+        .append(vals).append(");");
+
+        var stmt = connection.prepareStatement(
+        sql.toString(),
+        java.sql.Statement.RETURN_GENERATED_KEYS);
+
+    #set( $idx = 1 )
+    #foreach( $c in $entity.Columns )
+        #if( !$c.primaryKey || !$c.autoIncrement )
+                stmt.setObject($idx, entity.${c.getterName}());
+            #set( $idx = $idx + 1 )
+        #end
+    #end
+        stmt.executeUpdate();
+
+    #if( $pk.autoIncrement )
+            try (var rs = stmt.getGeneratedKeys()) {
+            if (rs.next()) {
+            entity.${pk.setterName}(rs.getLong(1));
+            }
+            }
+    #end
+
+        } else {
+        StringBuilder set = new StringBuilder();
+    #foreach( $c in $entity.Columns )
+        #if( !$c.primaryKey )
+                if (set.length() > 0) set.append(", ");
+                set.append("$c.columnName = ?");
+        #end
+    #end
+
+        StringBuilder sql = new StringBuilder()
+        .append("UPDATE \"${entity.TableName}\" SET ")
+        .append(set)
+        .append(" WHERE $pk.columnName = ?;");
+
+        var stmt = connection.prepareStatement(sql.toString());
+
+    #set( $idx = 1 )
+    #foreach( $c in $entity.Columns )
+        #if( !$c.primaryKey )
+                stmt.setObject($idx, entity.${c.getterName}());
+            #set( $idx = $idx + 1 )
+        #end
+    #end
+        stmt.setObject($idx, entity.${pk.getterName}());
+
+        stmt.executeUpdate();
         }
+        } catch (SQLException e) {
+        throw new PersistenceException("Cannot save ${entity.Name}", e);
+        }
+        }
+
+
 
 @Override
 public void delete(Object obj) {

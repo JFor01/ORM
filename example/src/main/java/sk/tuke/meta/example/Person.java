@@ -21,6 +21,7 @@ public class Person {
             name = "vek"
     )
     private int age;
+    @Column
 
 
     private Department department;
@@ -73,5 +74,8 @@ public class Person {
     @Override
     public String toString() {
         return String.format("Person %d: %s %s (%d)", Id, surname, name, age);
+    }
+    public void setId(long id){
+        this.Id = id;
     }
 }
