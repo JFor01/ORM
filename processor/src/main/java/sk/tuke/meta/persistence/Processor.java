@@ -123,6 +123,7 @@ public class Processor extends AbstractProcessor {
             String  refTable      = null;
             String  refColumn     = null;
             String  referencedCls = null;
+            String refPkFieldName = null;
 
             TypeMirror tm = field.asType();
             if (tm.getKind() == TypeKind.DECLARED) {
@@ -135,13 +136,28 @@ public class Processor extends AbstractProcessor {
                     referencedCls = refType.toString();
                     sqlType    = "INTEGER";
                     nullable   = false;
+
                 }
+
+                for (Element e : refType.getEnclosedElements()) {
+                    if (e.getKind() != ElementKind.FIELD) continue;
+                    if (e.getAnnotation(Column.class) == null) continue;
+
+                    refPkFieldName = e.getSimpleName().toString();
+                    if (e.getAnnotation(Id.class) != null) break;
+                }
+
             }
+            if (refPkFieldName == null) refPkFieldName = "id";
+            String referencedPkGetterName = "get" +  Character.toUpperCase(refPkFieldName.charAt(0))
+                    + refPkFieldName.substring(1);
+
+
 
             cols.add(new ColumnStructure(fieldName, columnName, sqlType,
                     nullable, unique,
                     primaryKey, autoIncrement,
-                    foreignKey, refTable, refColumn,referencedCls,javaType));
+                    foreignKey, refTable, refColumn,referencedCls,javaType,referencedPkGetterName));
         }
 
         boolean hasPk = cols.stream().anyMatch(ColumnStructure::isPrimaryKey);

@@ -18,6 +18,11 @@ public class ColumnStructure {
     private final String  referencedTable;
     private final String  referencedColumn;
     private final String referencedClass;
+    private final String referencedPkGetterName;
+
+
+
+
 
     public ColumnStructure(String fieldName,
                            String columnName,
@@ -30,7 +35,8 @@ public class ColumnStructure {
                            String  referencedTable,
                            String  referencedColumn,
                            String referencedClass,
-                           String javaType) {
+                           String javaType,
+                           String referencePkGetterName) {
 
         this.fieldName        = fieldName;
         this.columnName       = columnName;
@@ -44,6 +50,7 @@ public class ColumnStructure {
         this.referencedColumn = referencedColumn;
         this.referencedClass = referencedClass;
         this.javaType = javaType;
+        this.referencedPkGetterName = referencePkGetterName;
     }
 
 
@@ -78,4 +85,6 @@ public class ColumnStructure {
     public String getJavaType(){
         return javaType;
     }
+    public String getReferencedPkGetterName() { return referencedPkGetterName; }
+
 }

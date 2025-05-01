@@ -12,7 +12,7 @@ public class Person {
     @Column( name = "identification",
             unique = true
             )
-    private long Id;
+    private long notId;
     @Column(
             nullable = false
     )
@@ -35,8 +35,8 @@ public class Person {
         this.age = age;
     }
 
-    public long getId() {
-        return Id;
+    public long getNotId() {
+        return notId;
     }
 
     public String getSurname() {
@@ -73,9 +73,9 @@ public class Person {
 
     @Override
     public String toString() {
-        return String.format("Person %d: %s %s (%d)", Id, surname, name, age);
+        return String.format("Person %d: %s %s (%d)", notId, surname, name, age);
     }
-    public void setId(long id){
-        this.Id = id;
+    public void setNotId(long id){
+        this.notId = id;
     }
 }
