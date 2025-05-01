@@ -35,7 +35,7 @@ public class Main {
 
         Department it = new Department("it","IT");
 
-        Person hrasko = new Person("Janko", "Hrasko", 30);
+        Person hrasko = new Person("Janko", "Hrasko", 30,176.5);
         hrasko.setDepartment(it);
         manager.save(it);
         manager.save(hrasko);

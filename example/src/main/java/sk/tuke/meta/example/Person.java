@@ -25,14 +25,17 @@ public class Person {
 
 
     private Department department;
+    @Column
+    private double height;
 
     public Person() {
     }
 
-    public Person(String surname, String name, int age) {
+    public Person(String surname, String name, int age, double height) {
         this.surname = surname;
         this.name = name;
         this.age = age;
+        this.height = height;
     }
 
     public long getNotId() {
@@ -77,5 +80,11 @@ public class Person {
     }
     public void setNotId(long id){
         this.notId = id;
+    }
+    public void setHeight(double height){
+        this.height = height;
+    }
+    public double getHeight(){
+        return this.height;
     }
 }

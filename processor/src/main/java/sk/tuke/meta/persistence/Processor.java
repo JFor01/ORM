@@ -219,11 +219,11 @@ public class Processor extends AbstractProcessor {
 
     private String mapJavaType(String jt) {
         return switch (jt) {
-            case "java.lang.String" -> "VARCHAR";
+            case "java.lang.String" -> "TEXT";
             case "int", "java.lang.Integer",
-                    "long", "java.lang.Long",
-                    "double", "java.lang.Double" -> "INTEGER";
+                    "long", "java.lang.Long" -> "INTEGER";
             case "boolean", "java.lang.Boolean"  -> "BOOLEAN";
+            case "double","float", "java.lang.Double","java.lang.Float" -> "REAL";
             default  -> "TEXT";
         };
     }

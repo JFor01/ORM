@@ -100,6 +100,10 @@ ${entity.Name} obj=new ${entity.Name}();
                 obj.${c.setterName}(rs.getInt("$c.columnName" ));
         #elseif( $c.javaType == "long" || $c.javaType == "java.lang.Long" )
                 obj.${c.setterName}(rs.getLong("$c.columnName" ));
+        #elseif( $c.javaType == "float" || $c.javaType == "java.lang.Float" )
+                obj.${c.setterName}(rs.getFloat("$c.columnName" ));
+        #elseif( $c.javaType == "double" || $c.javaType == "java.lang.Double" )
+                obj.${c.setterName}(rs.getDouble("$c.columnName" ));
         #else
                 obj.${c.setterName}(rs.getString("$c.columnName" ));
         #end
