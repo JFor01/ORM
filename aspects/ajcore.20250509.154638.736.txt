@@ -1,0 +1,141 @@
+---- AspectJ Properties ---
+AspectJ Compiler 1.9.23 built on Wednesday Mar 12, 2025 at 15:57:07 PDT
+---- Dump Properties ---
+Dump file: ajcore.20250509.154638.736.txt
+Dump reason: java.lang.AssertionError
+Dump on exception: true
+Dump at exit condition: abort
+---- Exception Information ---
+java.lang.AssertionError: Attempt to push null on operand stack!
+	at org.aspectj.org.eclipse.jdt.internal.compiler.codegen.OperandStack.push(OperandStack.java:58)
+	at org.aspectj.org.eclipse.jdt.internal.compiler.codegen.OperandStack.push(OperandStack.java:84)
+	at org.aspectj.org.eclipse.jdt.internal.compiler.codegen.CodeStream.aload_0(CodeStream.java:334)
+	at org.aspectj.org.eclipse.jdt.internal.compiler.codegen.CodeStream.load(CodeStream.java:6322)
+	at org.aspectj.ajdt.internal.compiler.ast.AstUtil.generateParameterLoads(AstUtil.java:160)
+	at org.aspectj.ajdt.internal.compiler.ast.AspectDeclaration$20.generate(AspectDeclaration.java:1081)
+	at org.aspectj.ajdt.internal.compiler.ast.AspectDeclaration.generateMethod(AspectDeclaration.java:467)
+	at org.aspectj.ajdt.internal.compiler.ast.AspectDeclaration.generateInlineAccessMethod(AspectDeclaration.java:1076)
+	at org.aspectj.ajdt.internal.compiler.ast.AspectDeclaration.generateInlineAccessMethod(AspectDeclaration.java:1010)
+	at org.aspectj.ajdt.internal.compiler.ast.AspectDeclaration.generateInlineAccessMembers(AspectDeclaration.java:364)
+	at org.aspectj.ajdt.internal.compiler.ast.AspectDeclaration.generateAttributes(AspectDeclaration.java:310)
+	at org.aspectj.org.eclipse.jdt.internal.compiler.ast.TypeDeclaration.generateCode(TypeDeclaration.java:786)
+	at org.aspectj.ajdt.internal.compiler.ast.AspectDeclaration.generateCode(AspectDeclaration.java:297)
+	at org.aspectj.org.eclipse.jdt.internal.compiler.ast.TypeDeclaration.generateCode(TypeDeclaration.java:873)
+	at org.aspectj.org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration.generateCode(CompilationUnitDeclaration.java:403)
+	at org.aspectj.org.eclipse.jdt.internal.compiler.Compiler.process(Compiler.java:983)
+	at org.aspectj.org.eclipse.jdt.internal.compiler.Compiler.processCompiledUnits(Compiler.java:604)
+	at org.aspectj.org.eclipse.jdt.internal.compiler.Compiler.compile(Compiler.java:505)
+	at org.aspectj.org.eclipse.jdt.internal.compiler.Compiler.compile(Compiler.java:456)
+	at org.aspectj.ajdt.internal.core.builder.AjBuildManager.performCompilation(AjBuildManager.java:1101)
+	at org.aspectj.ajdt.internal.core.builder.AjBuildManager.performBuild(AjBuildManager.java:275)
+	at org.aspectj.ajdt.internal.core.builder.AjBuildManager.batchBuild(AjBuildManager.java:188)
+	at org.aspectj.ajdt.ajc.AjdtCommand.doCommand(AjdtCommand.java:103)
+	at org.aspectj.ajdt.ajc.AjdtCommand.runCommand(AjdtCommand.java:47)
+	at org.aspectj.tools.ajc.Main.run(Main.java:385)
+	at org.aspectj.tools.ajc.Main.runMain(Main.java:274)
+	at org.aspectj.tools.ajc.Main.main(Main.java:92)
+---- System Properties ---
+java.specification.version=19
+sun.jnu.encoding=UTF-8
+java.class.path=/Users/jurajhadzala/.gradle/caches/modules-2/files-2.1/org.aspectj/aspectjtools/1.9.23/35b05c31a853a38d165b7b5e65b3f09840f4964d/aspectjtools-1.9.23.jar
+java.vm.vendor=Oracle Corporation
+sun.arch.data.model=64
+user.variant=
+java.vendor.url=https://java.oracle.com/
+user.timezone=Europe/Bratislava
+java.vm.specification.version=19
+os.name=Mac OS X
+user.country=GB
+sun.java.launcher=SUN_STANDARD
+sun.boot.library.path=/Library/Java/JavaVirtualMachines/jdk-19.jdk/Contents/Home/lib
+sun.java.command=org.aspectj.tools.ajc.Main -argfile /Users/jurajhadzala/IdeaProjects/assignment.juraj.hadzala/aspects/build/tmp/compileAspectj/ajc.options
+jdk.debug=release
+sun.cpu.endian=little
+user.home=/Users/jurajhadzala
+user.language=en
+java.specification.vendor=Oracle Corporation
+java.version.date=2023-01-17
+java.home=/Library/Java/JavaVirtualMachines/jdk-19.jdk/Contents/Home
+file.separator=/
+java.vm.compressedOopsMode=Zero based
+line.separator=
+
+java.vm.specification.vendor=Oracle Corporation
+java.specification.name=Java Platform API Specification
+apple.awt.application.name=Main
+sun.management.compiler=HotSpot 64-Bit Tiered Compilers
+java.runtime.version=19.0.2+7-44
+user.name=jurajhadzala
+stdout.encoding=UTF-8
+path.separator=:
+os.version=13.7.5
+java.runtime.name=Java(TM) SE Runtime Environment
+file.encoding=UTF-8
+java.vm.name=Java HotSpot(TM) 64-Bit Server VM
+java.vendor.url.bug=https://bugreport.java.com/bugreport/
+java.io.tmpdir=/var/folders/89/7jhksdl91jj12v4j_0h1yykr0000gn/T/
+java.version=19.0.2
+user.dir=/Users/jurajhadzala/IdeaProjects/assignment.juraj.hadzala/aspects
+os.arch=x86_64
+java.vm.specification.name=Java Virtual Machine Specification
+native.encoding=UTF-8
+java.library.path=/Users/jurajhadzala/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:.
+java.vm.info=mixed mode, sharing
+stderr.encoding=UTF-8
+java.vendor=Oracle Corporation
+java.vm.version=19.0.2+7-44
+sun.io.unicode.encoding=UnicodeBig
+java.class.version=63.0
+---- Command Line ---
+-argfile
+/Users/jurajhadzala/IdeaProjects/assignment.juraj.hadzala/aspects/build/tmp/compileAspectj/ajc.options
+---- Full Classpath ---
+/Library/Java/JavaVirtualMachines/jdk-19.jdk/Contents/Home/lib/jrt-fs.jar(110832 bytes)
+/Users/jurajhadzala/IdeaProjects/assignment.juraj.hadzala/persistence/build/classes/java/main(1 entries)
+/Users/jurajhadzala/.gradle/caches/modules-2/files-2.1/org.aspectj/aspectjrt/1.9.23/c0e773bf8c0955e12cafc133bc566da98c90e9be/aspectjrt-1.9.23.jar(126627 bytes)
+/Users/jurajhadzala/.gradle/caches/modules-2/files-2.1/org.xerial/sqlite-jdbc/3.49.0.0/b759e513adadb7c7e600b709fb7df3ac560276bd/sqlite-jdbc-3.49.0.0.jar(14316889 bytes)
+/Users/jurajhadzala/IdeaProjects/assignment.juraj.hadzala/annotations/build/libs/annotations-1.0-SNAPSHOT.jar(3183 bytes)
+---- Compiler Messages ---
+error at
+import sk.tuke.meta.persistence.tx.AtomicPersistenceOperation;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/jurajhadzala/IdeaProjects/assignment.juraj.hadzala/aspects/src/main/aspectj/sk/tuke/meta/persistence/TransactionAspect.aj:6:0::0 The import sk.tuke.meta.persistence.tx.AtomicPersistenceOperation cannot be resolved
+warning at
+execution(@AtomicPersistenceOperation * *(..)) && target(caller);
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/jurajhadzala/IdeaProjects/assignment.juraj.hadzala/aspects/src/main/aspectj/sk/tuke/meta/persistence/TransactionAspect.aj:12:0::0 no match for this type name: AtomicPersistenceOperation [Xlint:invalidAbsoluteTypeName]
+error at
+try { conn.setAutoCommit(origAuto); } catch (Exception ignored) {}
+                         ^^^^^^^^
+/Users/jurajhadzala/IdeaProjects/assignment.juraj.hadzala/aspects/src/main/aspectj/sk/tuke/meta/persistence/TransactionAspect.aj:33:0::0 origAuto cannot be resolved to a variable
+abort ABORT -- (AssertionError) Attempt to push null on operand stack!
+Attempt to push null on operand stack!
+java.lang.AssertionError: Attempt to push null on operand stack!
+	at org.aspectj.org.eclipse.jdt.internal.compiler.codegen.OperandStack.push(OperandStack.java:58)
+	at org.aspectj.org.eclipse.jdt.internal.compiler.codegen.OperandStack.push(OperandStack.java:84)
+	at org.aspectj.org.eclipse.jdt.internal.compiler.codegen.CodeStream.aload_0(CodeStream.java:334)
+	at org.aspectj.org.eclipse.jdt.internal.compiler.codegen.CodeStream.load(CodeStream.java:6322)
+	at org.aspectj.ajdt.internal.compiler.ast.AstUtil.generateParameterLoads(AstUtil.java:160)
+	at org.aspectj.ajdt.internal.compiler.ast.AspectDeclaration$20.generate(AspectDeclaration.java:1081)
+	at org.aspectj.ajdt.internal.compiler.ast.AspectDeclaration.generateMethod(AspectDeclaration.java:467)
+	at org.aspectj.ajdt.internal.compiler.ast.AspectDeclaration.generateInlineAccessMethod(AspectDeclaration.java:1076)
+	at org.aspectj.ajdt.internal.compiler.ast.AspectDeclaration.generateInlineAccessMethod(AspectDeclaration.java:1010)
+	at org.aspectj.ajdt.internal.compiler.ast.AspectDeclaration.generateInlineAccessMembers(AspectDeclaration.java:364)
+	at org.aspectj.ajdt.internal.compiler.ast.AspectDeclaration.generateAttributes(AspectDeclaration.java:310)
+	at org.aspectj.org.eclipse.jdt.internal.compiler.ast.TypeDeclaration.generateCode(TypeDeclaration.java:786)
+	at org.aspectj.ajdt.internal.compiler.ast.AspectDeclaration.generateCode(AspectDeclaration.java:297)
+	at org.aspectj.org.eclipse.jdt.internal.compiler.ast.TypeDeclaration.generateCode(TypeDeclaration.java:873)
+	at org.aspectj.org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration.generateCode(CompilationUnitDeclaration.java:403)
+	at org.aspectj.org.eclipse.jdt.internal.compiler.Compiler.process(Compiler.java:983)
+	at org.aspectj.org.eclipse.jdt.internal.compiler.Compiler.processCompiledUnits(Compiler.java:604)
+	at org.aspectj.org.eclipse.jdt.internal.compiler.Compiler.compile(Compiler.java:505)
+	at org.aspectj.org.eclipse.jdt.internal.compiler.Compiler.compile(Compiler.java:456)
+	at org.aspectj.ajdt.internal.core.builder.AjBuildManager.performCompilation(AjBuildManager.java:1101)
+	at org.aspectj.ajdt.internal.core.builder.AjBuildManager.performBuild(AjBuildManager.java:275)
+	at org.aspectj.ajdt.internal.core.builder.AjBuildManager.batchBuild(AjBuildManager.java:188)
+	at org.aspectj.ajdt.ajc.AjdtCommand.doCommand(AjdtCommand.java:103)
+	at org.aspectj.ajdt.ajc.AjdtCommand.runCommand(AjdtCommand.java:47)
+	at org.aspectj.tools.ajc.Main.run(Main.java:385)
+	at org.aspectj.tools.ajc.Main.runMain(Main.java:274)
+	at org.aspectj.tools.ajc.Main.main(Main.java:92)
+

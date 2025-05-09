@@ -1,5 +1,7 @@
 package sk.tuke.meta.persistence;
 
+import sk.tuke.meta.persistence.annotations.AtomicPersistenceOperation;
+
 import java.sql.Connection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -10,9 +12,13 @@ public abstract class DAOPersistenceManager implements PersistenceManager {
     private final Connection connection;
     private final Map<Class<?>, EntityDAO<?>> daos = new LinkedHashMap<>();
 
+
     public DAOPersistenceManager(Connection connection) {
         this.connection = connection;
     }
+
+
+
 
     @SuppressWarnings("unchecked")
     public <T> EntityDAO<T> getDAO(Class<T> type) {

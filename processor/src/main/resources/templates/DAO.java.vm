@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import sk.tuke.meta.persistence.DAOPersistenceManager;
 import sk.tuke.meta.persistence.EntityDAO;
 import sk.tuke.meta.persistence.PersistenceException;
+import sk.tuke.meta.persistence.annotations.AtomicPersistenceOperation;
 
 public class $entity.DaoName implements EntityDAO<$entity.Name> {
 private Connection connection;
@@ -19,6 +20,7 @@ public ${entity.DaoName}(DAOPersistenceManager daoPersistenceManager){
         this.daoPersistenceManager=daoPersistenceManager;
         }
 @Override
+@AtomicPersistenceOperation
 public void createTable(){
         StringBuilder sb=new StringBuilder();
         sb.append("CREATE TABLE IF NOT EXISTS \"${entity.TableName}\" (\n" );
@@ -297,5 +299,13 @@ public void delete(Object obj){
         throw new PersistenceException("Cannot delete ${entity.Name}" ,e);
         }
         }
+@Override
+public Connection getConnection(){
+        return this.connection;
         }
+
+
+        }
+
+
 

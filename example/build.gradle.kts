@@ -1,5 +1,6 @@
 plugins {
     id("application")
+    id("io.freefair.aspectj.post-compile-weaving") version "8.13.1"
 }
 
 group = "sk.tuke.meta"
@@ -20,6 +21,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     annotationProcessor(project(":processor"))
+    aspect(project(":aspects"))
 }
 
 
