@@ -7,7 +7,6 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 
-import sk.tuke.meta.persistence.EntityDAO;
 
 @Aspect
 public class TransactionAspect {
@@ -35,8 +34,6 @@ public class TransactionAspect {
             try { conn.rollback(); } catch (SQLException ignored) {}
             throw ex;
 
-        } finally {
-            try { conn.setAutoCommit(origAuto); } catch (SQLException ignored) {}
         }
     }
 }
