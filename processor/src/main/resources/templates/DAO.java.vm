@@ -31,10 +31,10 @@ public void createTable(){
 
 
             sb.append("    $col.columnName $col.columnType" );
-        #if( !$col.Nullable )
+        #if( !$col.nullable )
                 sb.append(" NOT NULL" );
         #end
-        #if( $col.Unique )
+        #if( $col.unique )
                 sb.append(" UNIQUE" );
         #end
         #if( $col.primaryKey )
