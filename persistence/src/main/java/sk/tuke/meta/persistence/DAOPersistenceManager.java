@@ -63,4 +63,5 @@ public abstract class DAOPersistenceManager implements PersistenceManager {
     public void delete(Object entity) {
         getDAO((entity.getClass())).delete(entity);
     }
+
 }
