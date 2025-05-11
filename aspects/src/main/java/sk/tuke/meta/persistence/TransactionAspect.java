@@ -48,13 +48,11 @@ public class TransactionAspect {
     }
 
 
-    /* Any call that returns a java.sql.Connection ---------------- */
     @Pointcut("execution(java.sql.Connection *(..))" )
     private void anyConn() {
     }
 
 
-    /* After the factory returns, switch off auto-commit once       */
     @AfterReturning(pointcut = "anyConn()" , returning = "conn" )
     public void disableAutoCommit(Connection conn) {
         if (conn == null) return;
